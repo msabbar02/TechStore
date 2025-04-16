@@ -1,8 +1,16 @@
 package org.example.controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.UploadedFile;
 import org.example.dao.UsuarioDAO;
 import org.example.model.Usuario;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class AuthController {
 
@@ -52,12 +60,35 @@ public class AuthController {
 
     // Procesar registro
     public static void procesarRegistro(Context ctx) {
+        Usuario usuario = new Usuario();
+
         String nombre = ctx.formParam("nombre");
         String apellido = ctx.formParam("apellido");
         String direccion = ctx.formParam("direccion");
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
-        String fotoPerfil = ctx.formParam("fotoPerfil");
+
+        usuario.setNombre(nombre);
+        usuario.setApellido(apellido);
+        usuario.setDireccion(direccion);
+        usuario.setUsername(username);
+        usuario.setPassword(password);
+        usuario.setRol("lector");
+
+        // Manejar imagen
+        UploadedFile uploaded = ctx.uploadedFile("fotoPerfil");
+        if (uploaded != null) {
+            String nombreArchivo = System.currentTimeMillis() + "-" + uploaded.filename();
+            Path destino = Paths.get("uploads", nombreArchivo);
+            try (InputStream input = uploaded.content()) {
+                Files.copy(input, destino, StandardCopyOption.REPLACE_EXISTING);
+                usuario.setFotoPerfil("/uploads/" + nombreArchivo);
+            } catch (IOException e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error al subir foto de perfil");
+                return;
+            }
+        }
 
         if (UsuarioDAO.buscarPorUsername(username) != null) {
             ctx.attribute("error", "El nombre de usuario ya existe.");
@@ -65,18 +96,10 @@ public class AuthController {
             return;
         }
 
-        Usuario nuevo = new Usuario();
-        nuevo.setNombre(nombre);
-        nuevo.setApellido(apellido);
-        nuevo.setDireccion(direccion);
-        nuevo.setUsername(username);
-        nuevo.setPassword(password);
-        nuevo.setFotoPerfil(fotoPerfil);
-        nuevo.setRol("lector"); // siempre lector al registrarse
-
-        UsuarioDAO.guardar(nuevo);
+        UsuarioDAO.guardar(usuario);
         ctx.redirect("/login");
     }
+
 
     // Cerrar sesión
     public static void logout(Context ctx) {
@@ -98,9 +121,24 @@ public class AuthController {
         usuario.setNombre(ctx.formParam("nombre"));
         usuario.setApellido(ctx.formParam("apellido"));
         usuario.setDireccion(ctx.formParam("direccion"));
-        usuario.setFotoPerfil(ctx.formParam("fotoPerfil"));
+
+        // Subida de nueva foto de perfil (opcional)
+        UploadedFile uploaded = ctx.uploadedFile("fotoPerfil");
+        if (uploaded != null) {
+            String nombreArchivo = System.currentTimeMillis() + "-" + uploaded.filename();
+            Path destino = Paths.get("uploads", nombreArchivo);
+            try (InputStream input = uploaded.content()) {
+                Files.copy(input, destino, StandardCopyOption.REPLACE_EXISTING);
+                usuario.setFotoPerfil("/uploads/" + nombreArchivo);
+            } catch (IOException e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error al subir nueva foto de perfil");
+                return;
+            }
+        }
 
         UsuarioDAO.actualizar(usuario);
         ctx.redirect("/perfil");
     }
+
 }

@@ -1,25 +1,26 @@
 <#include "layout.ftl">
-<h2>Dashboard</h2>
-<a class="btn" href="/productos/nuevo">➕ Añadir producto</a>
 
-<div class="grid">
-    <#if productos?? && productos?size > 0>
-        <#list productos?keys as id>
-            <div class="card">
-                <img src="${productos[id].imagenUrl}" alt="${productos[id].nombre}" class="producto-img">
-                <h3>${productos[id].nombre}</h3>
-                <p>${productos[id].descripcion}</p>
-                <p><strong>${productos[id].precio} €</strong></p>
-                <a class="btn" href="/productos/${id}/editar">✏️ Editar</a>
-                <form method="post" action="/productos/${id}/eliminar" style="display:inline">
-                    <button class="btn eliminar" type="submit">❌ Eliminar</button>
-                </form>
-            </div>
+<h2>📦 Dashboard - Productos</h2>
+
+<#if productos??>
+<p>Total productos: ${productos?size}</p>
+
+<#if productos?size > 0>
+<ul>
+<#list productos as p>
+<li>
+<strong>${p.nombre}</strong> - ${p.precio} €
+<br>
+Imagen: <img src="${p.imagenUrl}" width="150">
+            </li>
         </#list>
+        </ul>
     <#else>
-        <p>No hay productos registrados.</p>
+        <p>❌ No hay productos en la lista.</p>
     </#if>
-</div>
-</main>
-</body>
-</html>
+
+<#else>
+    <p>⚠️ La lista 'productos' no se ha recibido.</p>
+</#if>
+
+</main></body></html>

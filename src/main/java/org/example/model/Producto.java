@@ -10,16 +10,30 @@ public class Producto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false)
     private String descripcion;
+
+    @Column(nullable = false)
     private double precio;
-    private String imagenUrl; // URL de la imagen del producto
+
+    @Column(name = "imagenUrl", nullable = false)
+    private String imagenUrl;
 
     public Producto() {
     }
 
-    // Getters y Setters
+    public Producto(int id, String nombre, String descripcion, double precio, String imagenUrl) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.imagenUrl = imagenUrl;
+    }
 
+    // Getters y Setters
     public int getId() {
         return id;
     }

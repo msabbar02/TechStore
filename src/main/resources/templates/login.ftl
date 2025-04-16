@@ -1,19 +1,23 @@
 <#include "layout.ftl">
 
-<h2>Iniciar sesión</h2>
+<h2>🔐 Iniciar sesión</h2>
 
 <#if error??>
-<p class="error">${error}</p>
+<p style="color: red;">${error}</p>
 </#if>
 
-<form method="post" action="/login">
-    <input type="text" name="username" placeholder="Usuario" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <input type="submit" value="Entrar">
+<form method="post" action="/login" class="formulario">
+    <label>Nombre de usuario:
+        <input type="text" name="username" required>
+    </label>
+
+    <label>Contraseña:
+        <input type="password" name="password" required>
+    </label>
+
+    <button type="submit">Entrar</button>
 </form>
 
 <p>¿No tienes cuenta? <a href="/register">Regístrate aquí</a></p>
 
-</main>
-</body>
-</html>
+</main></body></html>

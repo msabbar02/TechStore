@@ -45,20 +45,18 @@ public class ProductoDAO {
         }
     }
 
-    public static Map<Integer, Producto> obtenerTodos() {
+    public static List<Producto> obtenerTodos() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             List<Producto> productos = session.createQuery("from Producto", Producto.class).list();
-            Map<Integer, Producto> productoMap = new HashMap<>();
-            for (Producto producto : productos) {
-                productoMap.put(producto.getId(), producto);
-            }
-            System.out.println("Productos obtenidos como mapa: " + productoMap);
-            return productoMap;
+            System.out.println("Productos obtenidos como lista: " + productos.size());
+            return productos;
         } catch (Exception e) {
             e.printStackTrace();
-            return new HashMap<>(); // Retorna un mapa vacío en caso de error
+            return new ArrayList<>();
         }
     }
+
+
 
     public static List<Producto> obtenerConFiltros(String nombre, String precioMin, String precioMax) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -84,7 +82,9 @@ public class ProductoDAO {
                 query.setParameter("precioMax", Double.parseDouble(precioMax));
             }
 
-            return query.list();
+            List<Producto> productos = query.list();
+            System.out.println("Productos obtenidos con filtros: " + productos);
+            return productos;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();

@@ -1,6 +1,6 @@
 package org.example;
-
 import io.javalin.Javalin;
+import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinFreemarker;
 import freemarker.template.Configuration;
 import org.example.controller.AuthController;
@@ -25,6 +25,11 @@ public class Main {
                 staticFiles.hostedPath = "/css";
                 staticFiles.directory = "/static";
                 staticFiles.location = io.javalin.http.staticfiles.Location.CLASSPATH;
+            });
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.directory = "uploads";
+                staticFiles.hostedPath = "/uploads";
+                staticFiles.location = Location.EXTERNAL;
             });
         }).start(7000);
 

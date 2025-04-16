@@ -10,19 +10,42 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false)
     private String apellido;
+
+    @Column(nullable = false)
     private String direccion;
+
+    @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(nullable = false)
     private String password;
-    private String rol; // "admin" o "lector"
-    private String fotoPerfil; // URL de la imagen
+
+    @Column(name = "fotoPerfil")
+    private String fotoPerfil;
+
+    @Column(nullable = false)
+    private String rol;
 
     public Usuario() {
     }
 
-    // Getters y Setters
+    public Usuario(int id, String nombre, String apellido, String direccion, String username, String password, String fotoPerfil, String rol) {
+        this.id = id;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.direccion = direccion;
+        this.username = username;
+        this.password = password;
+        this.fotoPerfil = fotoPerfil;
+        this.rol = rol;
+    }
 
+    // Getters y Setters
     public int getId() {
         return id;
     }
@@ -71,19 +94,19 @@ public class Usuario {
         this.password = password;
     }
 
-    public String getRol() {
-        return rol;
-    }
-
-    public void setRol(String rol) {
-        this.rol = rol;
-    }
-
     public String getFotoPerfil() {
         return fotoPerfil;
     }
 
     public void setFotoPerfil(String fotoPerfil) {
         this.fotoPerfil = fotoPerfil;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }
