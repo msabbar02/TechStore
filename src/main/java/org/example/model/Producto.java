@@ -2,6 +2,8 @@ package org.example.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "producto")
 public class Producto {
@@ -13,14 +15,17 @@ public class Producto {
     @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false)
+    @Column
     private String descripcion;
 
     @Column(nullable = false)
     private double precio;
 
-    @Column(name = "imagenUrl", nullable = false)
+    @Column(name = "imagenUrl")
     private String imagenUrl;
+    
+    @Column(nullable = false)
+    private int existencias = 10; // Valor por defecto
 
     public Producto() {
     }
@@ -72,5 +77,13 @@ public class Producto {
 
     public void setImagenUrl(String imagenUrl) {
         this.imagenUrl = imagenUrl;
+    }
+    
+    public int getExistencias() {
+        return existencias;
+    }
+    
+    public void setExistencias(int existencias) {
+        this.existencias = existencias;
     }
 }
