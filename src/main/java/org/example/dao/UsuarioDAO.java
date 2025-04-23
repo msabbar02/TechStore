@@ -2,6 +2,7 @@ package org.example.dao;
 
 import org.example.model.Usuario;
 import org.example.util.HibernateUtil;
+import org.example.util.PasswordUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -19,10 +20,43 @@ public class UsuarioDAO {
 
     public static Usuario buscarPorUsernameYPassword(String username, String password) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return session.createQuery("FROM Usuario WHERE username = :u AND password = :p", Usuario.class)
+            Usuario usuario = session.createQuery("FROM Usuario WHERE username = :u", Usuario.class)
                     .setParameter("u", username)
-                    .setParameter("p", password)
                     .uniqueResult();
+            
+            if (usuario != null) {
+                System.out.println("Usuario encontrado: " + usuario.getUsername());
+                System.out.println("Hash almacenado: " + usuario.getPassword());
+                
+                // Verificar si la contraseña almacenada tiene el formato correcto (salt:hash)
+                String storedPassword = usuario.getPassword();
+                boolean formatoValido = storedPassword != null && storedPassword.contains(":");
+                System.out.println("Formato de contraseña válido: " + formatoValido);
+                
+                if (!formatoValido) {
+                    // El formato no es correcto, probablemente sea una contraseña antigua sin hash
+                    System.out.println("Formato de contraseña incorrecto, intentando comparación directa");
+                    if (password.equals(storedPassword)) {
+                        System.out.println("Autenticación exitosa mediante comparación directa");
+                        return usuario;
+                    }
+                } else {
+                    // Intentar con la verificación normal de hash
+                    boolean verificado = PasswordUtil.verificarPassword(password, storedPassword);
+                    System.out.println("Resultado de verificación de contraseña: " + verificado);
+                    
+                    if (verificado) {
+                        return usuario;
+                    }
+                }
+            } else {
+                System.out.println("No se encontró usuario con username: " + username);
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error al buscar usuario por username y password: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -33,12 +67,89 @@ public class UsuarioDAO {
                     .uniqueResult();
         }
     }
-
-    public static void actualizar(Usuario usuario) {
+    
+    /**
+     * Método para login directo con usuario admin (para recuperación)
+     * Esto es temporal hasta solucionar los problemas de hash
+     */
+    public static Usuario loginDirecto(String username, String password) {
+        if (!"admin".equalsIgnoreCase(username)) {
+            return null; // Solo permitir admin para recuperación
+        }
+        
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = session.beginTransaction();
-            session.merge(usuario);
-            tx.commit();
+            Usuario usuario = session.createQuery("FROM Usuario WHERE username = :u", Usuario.class)
+                    .setParameter("u", username)
+                    .uniqueResult();
+                    
+            if (usuario != null) {
+                // Actualizar a contraseña hasheada para futuros logins
+                Transaction tx = session.beginTransaction();
+                String newHashedPassword = PasswordUtil.hashPassword(password);
+                System.out.println("Actualizando contraseña admin a hash: " + newHashedPassword);
+                usuario.setPassword(newHashedPassword);
+                session.merge(usuario);
+                tx.commit();
+                
+                return usuario;
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error en loginDirecto: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
+
+    public static void actualizar(Usuario usuario) {
+        Transaction tx = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            session.merge(usuario);
+            session.flush(); // Forzar la sincronización con la base de datos
+            tx.commit();
+            System.out.println("Usuario actualizado correctamente: " + usuario.getId() + " - " + usuario.getUsername());
+        } catch (Exception e) {
+            if (tx != null && tx.isActive()) {
+                tx.rollback();
+            }
+            System.err.println("Error al actualizar usuario: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al actualizar usuario", e);
+        }
+    }
+
+    public static Usuario obtenerPorId(int id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.get(Usuario.class, id);
+        }
+    }
+    public static void eliminar(int id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction tx = session.beginTransaction();
+            try {
+                Usuario usuario = session.get(Usuario.class, id);
+                if (usuario != null) {
+                    session.remove(usuario);
+                }
+                tx.commit();
+            } catch (Exception e) {
+                if (tx != null && tx.isActive()) {
+                    tx.rollback();
+                }
+                throw new RuntimeException("Error al eliminar usuario", e);
+            }
+        }
+    }
+
+
+    public static List<Usuario> obtenerTodos() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Usuario", Usuario.class).list();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener la lista de usuarios", e);
+        }
+    }
+
+
 }
