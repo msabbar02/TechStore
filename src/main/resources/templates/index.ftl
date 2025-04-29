@@ -4,273 +4,324 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechStore - Tu tienda de tecnología</title>
-    
-    <!-- CSS minimalista y rápido -->
+
+    <!-- Iconos y fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* Variables básicas */
         :root {
-            --blue: #2563eb;
-            --dark-blue: #1d4ed8;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gray: #64748b;
-            --border: #e2e8f0;
+            --primary: #2563eb;
+            --primary-dark: #ffffff;
+            --secondary: #10b981;
+            --background: #2d9bf4;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
             --white: #ffffff;
-            --shadow: 0 2px 10px rgba(0,0,0,0.1);
-            --green: #10b981;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
-        /* Reset y base */
+
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            line-height: 1.5;
-            color: var(--dark);
-            background-color: var(--light);
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
         }
-        
+
         a {
             text-decoration: none;
             color: inherit;
         }
-        
+
         img {
             max-width: 100%;
+            display: block;
         }
-        
+
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 15px;
         }
-        
+
         /* Navbar */
         .navbar {
-            background-color: var(--dark);
-            color: var(--white);
-            padding: 15px 0;
+            background: var(--white);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
+
         .navbar .container {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: var(--white);
+            color: var(--primary);
         }
-        
+
         .menu {
             display: flex;
             gap: 20px;
             align-items: center;
         }
-        
-        .menu-link {
-            color: rgba(255,255,255,0.8);
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .menu-link:hover {
-            color: var(--white);
-        }
-        
+
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: 500;
-            text-align: center;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: 0.3s;
         }
-        
+
         .btn-primary {
-            background-color: var(--blue);
+            background: var(--primary);
             color: var(--white);
-            border: none;
         }
-        
+
         .btn-primary:hover {
-            background-color: var(--dark-blue);
+            background: var(--primary-dark);
         }
-        
-        .btn-success {
-            background-color: var(--green);
-            color: var(--white);
-            border: none;
-        }
-        
-        .btn-success:hover {
-            opacity: 0.9;
-        }
-        
+
         .btn-outline {
-            border: 1px solid var(--blue);
-            color: var(--blue);
+            border: 2px solid var(--primary);
+            color: var(--primary);
             background: transparent;
         }
-        
+
         .btn-outline:hover {
-            background-color: var(--blue);
+            background: var(--primary);
             color: var(--white);
         }
-        
-        /* Landing page */
+
+        /* Hero */
         .hero {
-            padding: 80px 0;
+            background: url('https://images.unsplash.com/photo-1600267165783-1de93390edfc?crop=entropy&cs=tinysrgb&fit=crop&w=1400&q=80') center/cover no-repeat;
+            padding: 100px 20px;
+            color: var(--white);
             text-align: center;
-            background-color: var(--white);
-            margin-bottom: 40px;
         }
-        
-        .hero-title {
-            font-size: 2.5rem;
+
+        .hero h1 {
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 20px;
-            color: var(--dark);
         }
-        
-        .hero-description {
+
+        .hero p {
             font-size: 1.2rem;
-            color: var(--gray);
-            max-width: 700px;
-            margin: 0 auto 30px;
+            margin-bottom: 30px;
+            color: #f1f5f9;
         }
-        
+
         .hero-buttons {
             display: flex;
-            gap: 15px;
             justify-content: center;
-            margin-top: 20px;
+            gap: 20px;
         }
-        
+
+        /* Features */
         .features {
-            padding: 60px 0;
-            background-color: var(--light);
+            background: var(--background);
+            padding: 60px 20px;
         }
-        
-        .features-title {
+
+        .features h2 {
             text-align: center;
-            margin-bottom: 40px;
-            font-size: 2rem;
-            font-weight: 600;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 50px;
         }
-        
+
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 30px;
         }
-        
+
         .feature-card {
-            background-color: var(--white);
-            border-radius: 8px;
+            background: var(--white);
             padding: 30px;
-            box-shadow: var(--shadow);
+            border-radius: 12px;
             text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
         }
-        
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
         .feature-icon {
-            font-size: 2.5rem;
+            font-size: 3rem;
+            color: var(--secondary);
             margin-bottom: 15px;
-            color: var(--blue);
         }
-        
+
         .feature-title {
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 10px;
         }
-        
+
         .feature-description {
-            color: var(--gray);
-            font-size: 0.95rem;
+            font-size: 1rem;
+            color: var(--text-gray);
         }
-        
+
+        /* Footer */
         .footer {
-            background-color: var(--dark);
+            background: var(--text-dark);
             color: var(--white);
-            padding: 40px 0;
+            padding: 40px 20px;
             text-align: center;
+            margin-top: 60px;
         }
-        
+
         .footer-text {
-            opacity: 0.8;
-            margin-bottom: 20px;
+            opacity: 0.7;
         }
     </style>
 </head>
+
 <body>
-    <header class="navbar">
-        <div class="container">
-            <a href="/" class="logo">TechStore</a>
-            <nav class="menu">
-                <a href="/login" class="btn btn-outline">Iniciar Sesión</a>
-                <a href="/registro" class="btn btn-primary">Registrarse</a>
-            </nav>
+
+<!-- Navbar -->
+<header class="navbar">
+    <div class="container">
+        <a href="/" class="logo">TechStore</a>
+        <nav class="menu">
+            <a href="/login" class="btn btn-outline">Iniciar Sesión</a>
+            <a href="/registro" class="btn btn-primary">Crear Cuenta</a>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+    <section class="hero" style="background: linear-gradient(to right, #2563eb, #1d4ed8); padding: 80px 20px; color: white; overflow: hidden; position: relative;">
+        <div class="container" style="text-align: center;">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 20px;">
+                Tecnología premium al alcance de un clic
+            </h1>
+            <p style="font-size: 1.2rem; margin-bottom: 50px; color: #e0f2fe;">
+                Tablets, PCs, smartphones y auriculares de última generación. Solo en TechStore.
+            </p>
         </div>
-    </header>
-    
-    <main>
-        <section class="hero">
-            <div class="container">
-                <h1 class="hero-title">Bienvenido a TechStore</h1>
-                <p class="hero-description">
-                    Tu tienda de tecnología favorita con los mejores productos a los mejores precios.
-                    Explora nuestro catálogo y encuentra lo que necesitas.
+
+        <!-- Carrusel -->
+        <div style="position: relative; width: 100%; overflow: hidden; margin-top: 40px;">
+            <div class="carrusel-track" style="display: flex; width: calc(300px * 10); animation: scroll 30s linear infinite;">
+                <!-- Imágenes específicas -->
+                <img src="/img/tele2.jpeg" alt="Smartphone">
+                <img src="/img/tele1.webp" alt="Smartphone">
+                <img src="/img/foto2.webp" alt="ordenadror">
+                <img src="/img/foto3.webp" alt="ordenadror">
+                <img src="/img/ordenador.webp" alt="ordenadror">
+                <img src="/img/teclado.webp" alt="Teclado">
+
+
+            </div>
+        </div>
+
+        <style>
+            @keyframes scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+            }
+        </style>
+    </section>
+
+
+
+
+
+    <!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <h2>¿Qué ofrece TechStore?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🛒</div>
+                <h3 class="feature-title">Compra Inteligente</h3>
+                <p class="feature-description">
+                    Accede a una plataforma intuitiva donde podrás buscar, comparar y adquirir los mejores productos tecnológicos en pocos clics.
                 </p>
-                <div class="hero-buttons">
-                    <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
-                    <a href="/registro" class="btn btn-outline">Crear Cuenta</a>
-                </div>
             </div>
-        </section>
-        
-        <section class="features">
-            <div class="container">
-                <h2 class="features-title">¿Por qué elegir TechStore?</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🔍</div>
-                        <h3 class="feature-title">Catálogo Completo</h3>
-                        <p class="feature-description">
-                            Amplia variedad de productos tecnológicos para todas tus necesidades.
-                        </p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🛒</div>
-                        <h3 class="feature-title">Compra Fácil</h3>
-                        <p class="feature-description">
-                            Proceso de compra sencillo y seguro para tu comodidad.
-                        </p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3 class="feature-title">Envío Rápido</h3>
-                        <p class="feature-description">
-                            Recibe tus productos en tiempo récord, sin largas esperas.
-                        </p>
-                    </div>
-                </div>
+            <div class="feature-card">
+                <div class="feature-icon">👤</div>
+                <h3 class="feature-title">Gestión de Perfil</h3>
+                <p class="feature-description">
+                    Crea tu cuenta personal, actualiza tus datos, gestiona tus pedidos y visualiza tu historial de compras fácilmente.
+                </p>
             </div>
-        </section>
-    </main>
-    
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">© ${.now?string('yyyy')} TechStore. Todos los derechos reservados.</p>
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <h3 class="feature-title">Seguimiento de Pedidos</h3>
+                <p class="feature-description">
+                    Consulta el estado de tus órdenes en tiempo real: preparación, envío y entrega directa a tu hogar.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">Seguridad y Confianza</h3>
+                <p class="feature-description">
+                    Tus datos personales y pagos están protegidos con los mejores estándares de seguridad digital.
+                </p>
+            </div>
         </div>
-    </footer>
+    </div>
+</section>
+
+
+<!-- Footer -->
+<!-- Footer actualizado -->
+<footer class="footer">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 40px;">
+
+            <!-- Carta Developer 1 -->
+            <div class="feature-card" style="background-color: #1e293b; color: white;">
+                <div class="feature-icon">💻</div>
+                <h3 class="feature-title">¿Eres Developer?</h3>
+                <p class="feature-description">
+                    TechStore está construido con tecnologías modernas como Java, MySQL, Hibernate y Freemarker.
+                    Si amas el código limpio y las buenas prácticas, ¡te invitamos a colaborar o inspirarte en nuestro proyecto!
+                </p>
+            </div>
+
+            <!-- Carta Developer 2 -->
+            <div class="feature-card" style="background-color: #1e293b; color: white;">
+                <div class="feature-icon">🚀</div>
+                <h3 class="feature-title">¡Contribuye!</h3>
+                <p class="feature-description">
+                    ¿Tienes ideas para mejorar TechStore? Estamos abiertos a nuevas funcionalidades, optimizaciones y mejoras UX/UI.
+                    ¡Súmate y haz crecer esta comunidad tecnológica!
+                </p>
+            </div>
+
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 20px;">
+            <a href="/about" class="btn btn-outline">Sobre Nosotros</a>
+            <a href="/soporte" class="btn btn-outline">Soporte</a>
+            <a href="/terminos" class="btn btn-outline">Términos y Condiciones</a>
+            <a href="/privacidad" class="btn btn-outline">Política de Privacidad</a>
+        </div>
+
+        <p class="footer-text">© ${.now?string('yyyy')} TechStore. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+
 </body>
 </html>

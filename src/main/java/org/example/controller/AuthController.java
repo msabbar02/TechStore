@@ -1,7 +1,6 @@
 package org.example.controller;
 
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
 import io.javalin.http.UploadedFile;
 import org.example.dao.UsuarioDAO;
 import org.example.model.Usuario;
@@ -14,8 +13,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +20,6 @@ public class AuthController {
 
     // Mostrar login
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-
-
 
     // Mostrar login
         public static void mostrarLogin(Context ctx) {
@@ -126,6 +120,7 @@ public class AuthController {
         String nombre = ctx.formParam("nombre");
         String apellido = ctx.formParam("apellido");
         String direccion = ctx.formParam("direccion");
+        String rol = ctx.formParam("rol"); // Valor por defecto: lector
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 

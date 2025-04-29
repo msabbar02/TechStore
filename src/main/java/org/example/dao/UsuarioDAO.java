@@ -26,29 +26,28 @@ public class UsuarioDAO {
             
             if (usuario != null) {
                 System.out.println("Usuario encontrado: " + usuario.getUsername());
-                System.out.println("Hash almacenado: " + usuario.getPassword());
+                System.out.println("Rol del usuario: " + usuario.getRol());
                 
-                // Verificar si la contraseña almacenada tiene el formato correcto (salt:hash)
                 String storedPassword = usuario.getPassword();
-                boolean formatoValido = storedPassword != null && storedPassword.contains(":");
-                System.out.println("Formato de contraseña válido: " + formatoValido);
+                // Primero intentar comparación directa (para contraseñas sin hash)
+                if (password.equals(storedPassword)) {
+                    System.out.println("Autenticación exitosa mediante comparación directa");
+                    return usuario;
+                }
                 
-                if (!formatoValido) {
-                    // El formato no es correcto, probablemente sea una contraseña antigua sin hash
-                    System.out.println("Formato de contraseña incorrecto, intentando comparación directa");
-                    if (password.equals(storedPassword)) {
-                        System.out.println("Autenticación exitosa mediante comparación directa");
-                        return usuario;
-                    }
-                } else {
-                    // Intentar con la verificación normal de hash
+                // Si hay formato de hash, intentar verificar
+                boolean formatoValido = storedPassword != null && storedPassword.contains(":");
+                if (formatoValido) {
                     boolean verificado = PasswordUtil.verificarPassword(password, storedPassword);
-                    System.out.println("Resultado de verificación de contraseña: " + verificado);
+                    System.out.println("Resultado de verificación de contraseña hasheada: " + verificado);
                     
                     if (verificado) {
+                        System.out.println("Autenticación exitosa mediante verificación hash");
                         return usuario;
                     }
                 }
+                
+                System.out.println("Contraseña incorrecta para usuario: " + username);
             } else {
                 System.out.println("No se encontró usuario con username: " + username);
             }

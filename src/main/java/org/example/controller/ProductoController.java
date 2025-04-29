@@ -1,10 +1,13 @@
 package org.example.controller;
 
 import io.javalin.http.Context;
+import org.example.dao.OrdenDAO;
 import org.example.dao.ProductoDAO;
+import org.example.model.Orden;
 import org.example.model.Producto;
 import org.example.model.Usuario;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,44 +20,105 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 public class ProductoController {
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
 
+    /**
+     * Método para mostrar el dashboard administrativo
+     */
     public static void mostrarDashboard(Context ctx) {
         try {
+            logger.info("Iniciando carga del dashboard administrativo");
+            
             // Obtener el usuario de la sesión
             Usuario usuario = ctx.sessionAttribute("usuario");
 
             // Verificar que el usuario está autenticado
             if (usuario == null) {
+                logger.warn("No hay usuario en sesión al intentar acceder al dashboard");
                 ctx.redirect("/login");
                 return;
             }
-
+    
+            // Verificar si el usuario es admin
+            if (!"admin".equalsIgnoreCase(usuario.getRol())) {
+                logger.warn("Usuario no es admin: {} (Rol: {})", usuario.getUsername(), usuario.getRol());
+                ctx.status(403);
+                ctx.result("Acceso denegado: Solo administradores pueden acceder al dashboard");
+                return;
+            }
+    
+            logger.info("Mostrando dashboard para admin: {}", usuario.getUsername());
+    
             // Obtener la lista de productos
             List<Producto> productos = ProductoDAO.obtenerTodos();
-
+            logger.info("Productos encontrados: {}", productos.size());
+            
+            // Obtener las órdenes para la pestaña de pedidos
+            List<Orden> ordenes = new ArrayList<>();
+            try {
+                ordenes = OrdenDAO.obtenerTodasOrdenes();
+                logger.info("Órdenes cargadas: {}", ordenes.size());
+            } catch (Exception e) {
+                logger.warn("Error al cargar órdenes: {}", e.getMessage());
+            }
+    
             // Crear el modelo de datos para la plantilla
             Map<String, Object> modelo = new HashMap<>();
             modelo.put("productos", productos);
+            modelo.put("ordenes", ordenes);
             modelo.put("usuario", usuario);
-
+            
+            // Verificar si hay mensaje de operación exitosa en la sesión
+            String mensaje = ctx.sessionAttribute("mensaje");
+            if (mensaje != null && !mensaje.isEmpty()) {
+                modelo.put("mensaje", mensaje);
+                // Limpiar el mensaje después de usarlo
+                ctx.sessionAttribute("mensaje", null);
+                logger.info("Mensaje para el dashboard: {}", mensaje);
+            }
+    
             // Renderizar la plantilla del dashboard
             ctx.render("dashboard.ftl", modelo);
-
+            logger.info("Dashboard renderizado correctamente");
+    
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error al cargar el dashboard: {}", e.getMessage(), e);
             ctx.status(500);
             ctx.result("Error al cargar el dashboard: " + e.getMessage());
         }
     }
 
-
-
+    /**
+     * Método para mostrar el formulario de creación de productos
+     */
     public static void formularioNuevo(Context ctx) {
-        ctx.render("productos/nuevo.ftl");
+        try {
+            // Verificar que el usuario es administrador
+            Usuario usuario = ctx.sessionAttribute("usuario");
+            if (usuario == null || !"admin".equalsIgnoreCase(usuario.getRol())) {
+                logger.warn("Intento no autorizado de acceder al formulario de nuevo producto");
+                ctx.redirect("/login");
+                return;
+            }
+            
+            // Crear modelo y agregar el usuario para mantener la consistencia de navegación
+            Map<String, Object> modelo = new HashMap<>();
+            modelo.put("usuario", usuario);
+            
+            // Verificar si hay un mensaje de error previo
+            String error = ctx.sessionAttribute("error");
+            if (error != null && !error.isEmpty()) {
+                modelo.put("error", error);
+                ctx.sessionAttribute("error", null);
+            }
+            
+            ctx.render("productos/nuevo.ftl", modelo);
+            logger.info("Formulario de nuevo producto mostrado para: {}", usuario.getUsername());
+        } catch (Exception e) {
+            logger.error("Error al mostrar formulario nuevo producto: {}", e.getMessage(), e);
+            ctx.redirect("/dashboard");
+        }
     }
     /**
      * Método para mostrar los detalles de un producto
@@ -154,101 +218,238 @@ public class ProductoController {
         }
     }
 
+    /**
+     * Método para mostrar el formulario de edición de un producto
+     */
     public static void formularioEditar(Context ctx) {
         try {
+            // Verificar que el usuario es administrador
+            Usuario usuario = ctx.sessionAttribute("usuario");
+            if (usuario == null || !"admin".equalsIgnoreCase(usuario.getRol())) {
+                logger.warn("Intento no autorizado de editar producto");
+                ctx.redirect("/login");
+                return;
+            }
+            
             int id = Integer.parseInt(ctx.pathParam("id"));
+            logger.info("Mostrando formulario de edición para producto ID: {}", id);
+            
             Producto producto = ProductoDAO.obtenerPorId(id);
             if (producto != null) {
                 Map<String, Object> modelo = new HashMap<>();
                 modelo.put("producto", producto);
+                modelo.put("usuario", usuario);
+                
+                // Verificar si hay un mensaje de error previo
+                String error = ctx.sessionAttribute("error");
+                if (error != null && !error.isEmpty()) {
+                    modelo.put("error", error);
+                    ctx.sessionAttribute("error", null);
+                }
+                
                 ctx.render("productos/editar.ftl", modelo);
             } else {
-                ctx.status(404);
-                ctx.result("Producto no encontrado");
+                logger.warn("Producto no encontrado: ID {}", id);
+                ctx.sessionAttribute("error", "Producto no encontrado");
+                ctx.redirect("/dashboard");
             }
+        } catch (NumberFormatException e) {
+            logger.error("ID de producto inválido: {}", e.getMessage());
+            ctx.sessionAttribute("error", "ID de producto inválido");
+            ctx.redirect("/dashboard");
         } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500);
-            ctx.result("Error al cargar el formulario de edición");
+            logger.error("Error al cargar formulario de edición: {}", e.getMessage(), e);
+            ctx.sessionAttribute("error", "Error al cargar el formulario de edición: " + e.getMessage());
+            ctx.redirect("/dashboard");
         }
     }
-
+    
+    /**
+     * Método para actualizar un producto existente
+     */
     public static void editarProducto(Context ctx) {
         try {
+            // Verificar que el usuario es administrador
+            Usuario usuario = ctx.sessionAttribute("usuario");
+            if (usuario == null || !"admin".equalsIgnoreCase(usuario.getRol())) {
+                logger.warn("Intento no autorizado de actualizar producto");
+                ctx.redirect("/login");
+                return;
+            }
+            
             int id = Integer.parseInt(ctx.pathParam("id"));
+            logger.info("Actualizando producto ID: {}", id);
+            
             Producto producto = ProductoDAO.obtenerPorId(id);
             if (producto != null) {
-                producto.setNombre(ctx.formParam("nombre"));
+                // Validar nombre (campo obligatorio)
+                String nombre = ctx.formParam("nombre");
+                if (nombre == null || nombre.trim().isEmpty()) {
+                    logger.warn("Intento de actualizar producto sin nombre");
+                    Map<String, Object> modelo = new HashMap<>();
+                    modelo.put("error", "El nombre del producto es obligatorio");
+                    modelo.put("producto", producto);
+                    modelo.put("usuario", usuario);
+                    ctx.render("productos/editar.ftl", modelo);
+                    return;
+                }
+                
+                producto.setNombre(nombre);
                 producto.setDescripcion(ctx.formParam("descripcion"));
-                producto.setPrecio(Double.parseDouble(ctx.formParam("precio")));
-
+                
+                // Validar y parsear precio
+                try {
+                    double precio = Double.parseDouble(ctx.formParam("precio"));
+                    if (precio < 0) {
+                        throw new NumberFormatException("El precio no puede ser negativo");
+                    }
+                    producto.setPrecio(precio);
+                } catch (NumberFormatException e) {
+                    logger.warn("Error al parsear precio para producto {}: {}", id, e.getMessage());
+                    Map<String, Object> modelo = new HashMap<>();
+                    modelo.put("error", "El precio debe ser un número válido mayor o igual a cero");
+                    modelo.put("producto", producto);
+                    modelo.put("usuario", usuario);
+                    ctx.render("productos/editar.ftl", modelo);
+                    return;
+                }
+    
                 // Actualizar existencias
                 try {
                     String existenciasStr = ctx.formParam("existencias");
                     if (existenciasStr != null && !existenciasStr.isEmpty()) {
-                        producto.setExistencias(Integer.parseInt(existenciasStr));
+                        int existencias = Integer.parseInt(existenciasStr);
+                        if (existencias < 0) {
+                            throw new NumberFormatException("Las existencias no pueden ser negativas");
+                        }
+                        producto.setExistencias(existencias);
                     }
                 } catch (NumberFormatException e) {
                     logger.warn("Error al parsear existencias para el producto {}: {}", id, e.getMessage());
+                    Map<String, Object> modelo = new HashMap<>();
+                    modelo.put("error", "Las existencias deben ser un número entero positivo");
+                    modelo.put("producto", producto);
+                    modelo.put("usuario", usuario);
+                    ctx.render("productos/editar.ftl", modelo);
+                    return;
                 }
-
+    
                 // Procesar la imagen subida solo si se proporciona una nueva
                 UploadedFile uploadedFile = ctx.uploadedFile("imagen");
-                if (uploadedFile != null) {
+                if (uploadedFile != null && uploadedFile.size() > 0) {
                     try {
                         // Generar nombre único para la imagen
                         String nombreArchivo = System.currentTimeMillis() + "_" + uploadedFile.filename();
-
+    
                         // Asegurarse de que exista el directorio
                         File uploadDir = new File("uploads/productos");
                         if (!uploadDir.exists()) {
                             uploadDir.mkdirs();
                         }
-
+    
                         // Guardar el archivo
                         String rutaArchivo = "uploads/productos/" + nombreArchivo;
                         FileUtil.streamToFile(uploadedFile.content(), rutaArchivo);
-
+    
                         // Eliminar imagen anterior si no es la predeterminada
                         String imagenAnterior = producto.getImagenUrl();
                         if (imagenAnterior != null && !imagenAnterior.equals("/img/default-product.jpg") &&
                             imagenAnterior.startsWith("/uploads/")) {
                             File imagenAnteriorFile = new File(imagenAnterior.substring(1)); // Eliminar la barra inicial
                             if (imagenAnteriorFile.exists()) {
-                                imagenAnteriorFile.delete();
+                                boolean eliminada = imagenAnteriorFile.delete();
+                                logger.info("Imagen anterior {}: {}", eliminada ? "eliminada" : "no se pudo eliminar", imagenAnterior);
                             }
                         }
-
+    
                         // Actualizar la URL de la imagen
                         producto.setImagenUrl("/uploads/productos/" + nombreArchivo);
+                        logger.info("Nueva imagen guardada para producto {}: {}", id, producto.getImagenUrl());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Error al procesar imagen para producto {}: {}", id, e.getMessage(), e);
                         // En caso de error, se mantiene la imagen existente
                     }
                 }
-
+    
+                // Guardar los cambios
                 ProductoDAO.actualizar(producto);
+                logger.info("Producto actualizado correctamente: ID {}", id);
+                
+                // Agregar mensaje de éxito y redirigir al dashboard
+                ctx.sessionAttribute("mensaje", "¡Producto actualizado exitosamente!");
                 ctx.redirect("/dashboard");
             } else {
-                ctx.status(404);
-                ctx.result("Producto no encontrado");
+                logger.warn("Producto no encontrado para actualizar: ID {}", id);
+                ctx.sessionAttribute("error", "Producto no encontrado");
+                ctx.redirect("/dashboard");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500);
-            ctx.result("Error al actualizar el producto");
-        }
-    }
-
-    public static void eliminarProducto(Context ctx) {
-        try {
-            int id = Integer.parseInt(ctx.pathParam("id"));
-            ProductoDAO.eliminar(id);
+        } catch (NumberFormatException e) {
+            logger.error("ID de producto inválido: {}", e.getMessage());
+            ctx.sessionAttribute("error", "ID de producto inválido");
             ctx.redirect("/dashboard");
         } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500);
-            ctx.result("Error al eliminar el producto");
+            logger.error("Error al actualizar producto: {}", e.getMessage(), e);
+            ctx.sessionAttribute("error", "Error al actualizar el producto: " + e.getMessage());
+            ctx.redirect("/dashboard");
+        }
+    }
+    
+    /**
+     * Método para eliminar un producto
+     */
+    public static void eliminarProducto(Context ctx) {
+        try {
+            // Verificar que el usuario es administrador
+            Usuario usuario = ctx.sessionAttribute("usuario");
+            if (usuario == null || !"admin".equalsIgnoreCase(usuario.getRol())) {
+                logger.warn("Intento no autorizado de eliminar producto");
+                ctx.redirect("/login");
+                return;
+            }
+            
+            int id = Integer.parseInt(ctx.pathParam("id"));
+            logger.info("Eliminando producto ID: {}", id);
+            
+            // Obtener el producto antes de eliminarlo para registrar información
+            Producto producto = ProductoDAO.obtenerPorId(id);
+            if (producto != null) {
+                String nombreProducto = producto.getNombre();
+                
+                // Intentar eliminar la imagen si no es la predeterminada
+                String imagenUrl = producto.getImagenUrl();
+                if (imagenUrl != null && !imagenUrl.equals("/img/default-product.jpg") && 
+                    imagenUrl.startsWith("/uploads/")) {
+                    try {
+                        File imagenFile = new File(imagenUrl.substring(1)); // Eliminar la barra inicial
+                        if (imagenFile.exists()) {
+                            boolean eliminada = imagenFile.delete();
+                            logger.info("Imagen {}: {}", eliminada ? "eliminada" : "no se pudo eliminar", imagenUrl);
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Error al eliminar imagen del producto: {}", e.getMessage());
+                    }
+                }
+                
+                // Eliminar el producto
+                ProductoDAO.eliminar(id);
+                logger.info("Producto eliminado correctamente: {} (ID: {})", nombreProducto, id);
+                
+                // Agregar mensaje de éxito
+                ctx.sessionAttribute("mensaje", "¡Producto '" + nombreProducto + "' eliminado exitosamente!");
+            } else {
+                logger.warn("Intento de eliminar producto inexistente ID: {}", id);
+                ctx.sessionAttribute("error", "El producto que intentas eliminar no existe");
+            }
+            
+            ctx.redirect("/dashboard");
+        } catch (NumberFormatException e) {
+            logger.error("ID de producto inválido: {}", e.getMessage());
+            ctx.sessionAttribute("error", "ID de producto inválido");
+            ctx.redirect("/dashboard");
+        } catch (Exception e) {
+            logger.error("Error al eliminar producto: {}", e.getMessage(), e);
+            ctx.sessionAttribute("error", "Error al eliminar el producto: " + e.getMessage());
+            ctx.redirect("/dashboard");
         }
     }
 
@@ -256,29 +457,42 @@ public class ProductoController {
 
     public static void mostrarCatalogoSimple(Context ctx) {
     try {
+        System.out.println("Iniciando carga de catálogo simple...");
+        
+        // Obtener el usuario de la sesión
+        Usuario usuario = ctx.sessionAttribute("usuario");
+        if (usuario == null) {
+            System.out.println("No hay usuario en sesión para catálogo simple, redirigiendo a login");
+            ctx.redirect("/login");
+            return;
+        }
+    
+        System.out.println("Usuario en sesión para catálogo: " + usuario.getUsername() + " (Rol: " + usuario.getRol() + ")");
+        
+        // Obtener todos los productos
         List<Producto> productos = ProductoDAO.obtenerTodos();
+        System.out.println("Productos obtenidos para catálogo: " + productos.size());
+        
+        // Preparar el modelo
         Map<String, Object> modelo = new HashMap<>();
         modelo.put("productos", productos);
-
-        Usuario usuario = ctx.sessionAttribute("usuario");
-        if (usuario != null) {
-            modelo.put("usuario", usuario);
-            System.out.println("Usuario en sesión: " + usuario.getUsername());
-        } else {
-            System.out.println("No hay usuario en sesión");
-        }
-
+        modelo.put("usuario", usuario);
+    
+        // Procesar mensajes de sesión si existen
         String mensaje = ctx.sessionAttribute("mensaje");
         if (mensaje != null && !mensaje.isEmpty()) {
+            System.out.println("Mensaje en sesión: " + mensaje);
             modelo.put("mensaje", mensaje);
-            ctx.sessionAttribute("mensaje", null);
+            ctx.sessionAttribute("mensaje", null); // Limpiar mensaje
         }
-
+    
         if (!productos.isEmpty()) {
             modelo.put("id", productos.get(0).getId()); // Ejemplo: pasa el ID del primer producto
         }
-
+    
+        System.out.println("Renderizando plantilla de catálogo simple...");
         ctx.render("catalogo_simple.ftl", modelo);
+        System.out.println("Plantilla de catálogo simple renderizada correctamente");
     } catch (Exception e) {
         System.err.println("Error al cargar el catálogo: " + e.getMessage());
         e.printStackTrace();

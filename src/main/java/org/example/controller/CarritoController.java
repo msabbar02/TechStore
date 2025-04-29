@@ -3,65 +3,24 @@ package org.example.controller;
 import io.javalin.http.Context;
 import org.example.dao.OrdenDAO;
 import org.example.dao.ProductoDAO;
-import org.example.model.*;
+    import org.example.model.ItemCarrito;
+import org.example.model.Orden;
+import org.example.model.Producto;
+    import org.example.model.Usuario;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+    import java.util.HashMap;
+    import java.util.List;
+    import java.util.Map;
 
-/**
- * Controlador para gestionar las operaciones del carrito de compras
- * Versión optimizada para mejorar el rendimiento
- */
-public class CarritoController {
-    
-    // Caché para productos frecuentemente consultados
-    private static final Map<Integer, Producto> CACHE_PRODUCTOS = new ConcurrentHashMap<>(50);
-    
-    // Límite de tiempo para refrescar caché (30 segundos)
-    private static final long CACHE_TIMEOUT_MS = 30000;
-    private static final Map<Integer, Long> CACHE_TIMESTAMPS = new ConcurrentHashMap<>(50);
-    
-    /**
-     * Método para mostrar el contenido del carrito
-     */
-    public static void verCarrito(Context ctx) {
-        try {
-            Usuario usuario = ctx.sessionAttribute("usuario");
-            if (usuario == null) {
-                ctx.redirect("/login");
-                return;
-            }
+import static org.example.controller.UsuarioController.CACHE_TIMEOUT_MS;
+import static org.example.dao.ProductoDAO.CACHE_TIMESTAMP;
+import static org.example.dao.ProductoDAO.PRODUCTOS_CACHE;
+   public class CarritoController {
 
-            // Obtener el carrito de la sesión o crear uno nuevo
-            List<ItemCarrito> itemsCarrito = ctx.sessionAttribute("carrito");
-            if (itemsCarrito == null) {
-                itemsCarrito = new ArrayList<>();
-                ctx.sessionAttribute("carrito", itemsCarrito);
-            }
-
-            // Calcular el total
-            double total = 0.0;
-            for (ItemCarrito item : itemsCarrito) {
-                total += item.getSubtotal(); // Usar el subtotal que incluye la cantidad
-            }
-
-            Map<String, Object> modelo = new HashMap<>();
-            modelo.put("usuario", usuario);
-            modelo.put("items", itemsCarrito);
-            modelo.put("total", total);
-            
-            ctx.render("carrito.ftl", modelo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ctx.status(500);
-            ctx.result("Error al cargar el carrito");
-        }
-    }
+    // Tiempo de expiración de caché en milisegundos
+    private static final long CACHE_TIMEOUT_MS = 120000; // 2 minutos
 
     /**
      * Método para agregar un producto al carrito (desde formulario)
@@ -71,7 +30,7 @@ public class CarritoController {
             int productoId = Integer.parseInt(ctx.formParam("productoId"));
             String cantidadParam = ctx.formParam("cantidad");
             int cantidad = 1; // Valor predeterminado
-            
+
             if (cantidadParam != null && !cantidadParam.isEmpty()) {
                 try {
                     cantidad = Integer.parseInt(cantidadParam);
@@ -79,7 +38,7 @@ public class CarritoController {
                     // Si no es un número válido, usamos el valor predeterminado
                 }
             }
-            
+
             // Obtener carrito de la sesión o crear uno nuevo
             List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
             if (carrito == null) {
@@ -122,29 +81,24 @@ public class CarritoController {
      */
     private static Producto obtenerProductoOptimizado(int productoId) {
         // Verificar si el producto está en caché y si es válido
-        Producto cachedProducto = CACHE_PRODUCTOS.get(productoId);
-        Long timestamp = CACHE_TIMESTAMPS.get(productoId);
-        
+        Producto cachedProducto = PRODUCTOS_CACHE.get(productoId);
+        Long timestamp = CACHE_TIMESTAMP.get(productoId);
+
         // Si está en caché y aún es válido
-        if (cachedProducto != null && timestamp != null && 
-            System.currentTimeMillis() - timestamp < CACHE_TIMEOUT_MS) {
+        if (cachedProducto != null && timestamp != null &&
+                System.currentTimeMillis() - timestamp < CACHE_TIMEOUT_MS) {
             return cachedProducto;
         }
-        
+
         // Si no está en caché o expiró, consultarlo y almacenarlo
         Producto producto = ProductoDAO.obtenerPorId(productoId);
         if (producto != null) {
-            CACHE_PRODUCTOS.put(productoId, producto);
-            CACHE_TIMESTAMPS.put(productoId, System.currentTimeMillis());
+            PRODUCTOS_CACHE.put(productoId, producto);
+            CACHE_TIMESTAMP.put(productoId, System.currentTimeMillis());
         }
-        
+
         return producto;
     }
-    
-    /**
-     * Método para agregar un producto al carrito por ID en la URL
-     * Versión optimizada para mejorar el rendimiento
-     */
 
 
     /**
@@ -193,7 +147,7 @@ public class CarritoController {
         try {
             int productoId = Integer.parseInt(ctx.pathParam("id"));
             int cantidad = Integer.parseInt(ctx.formParam("cantidad"));
-            
+
             List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
             if (carrito != null) {
                 for (ItemCarrito item : carrito) {
@@ -207,7 +161,7 @@ public class CarritoController {
                     }
                 }
             }
-            
+
             // Si es una petición AJAX, devolver respuesta JSON
             String requestedWith = ctx.header("X-Requested-With");
             if ("XMLHttpRequest".equals(requestedWith)) {
@@ -216,11 +170,11 @@ public class CarritoController {
                 ctx.result("{\"success\": true}");
                 return;
             }
-            
+
             ctx.redirect("/carrito");
         } catch (Exception e) {
             e.printStackTrace();
-            
+
             // Si es una petición AJAX, devolver error JSON
             String requestedWith = ctx.header("X-Requested-With");
             if ("XMLHttpRequest".equals(requestedWith)) {
@@ -229,7 +183,7 @@ public class CarritoController {
                 ctx.result("{\"success\": false, \"error\": \"" + e.getMessage() + "\"}");
                 return;
             }
-            
+
             ctx.status(500);
             ctx.result("Error al actualizar cantidad");
         }
@@ -245,12 +199,12 @@ public class CarritoController {
             }
 
             // Obtener el carrito del usuario desde la base de datos
-            List<Orden> itemsCarrito = OrdenDAO. obtenerOrdenesDeUsuario(Long.valueOf(usuario.getId()));
+            List<Orden> itemsCarrito = OrdenDAO.obtenerOrdenesDeUsuario(Long.valueOf(usuario.getId()));
 
             // Calcular el total
             double total = itemsCarrito.stream()
-                                       .mapToDouble(Orden::calcularSubtotal)
-                                       .sum();
+                    .mapToDouble(Orden::calcularSubtotal)
+                    .sum();
 
             // Preparar el modelo para la vista
             Map<String, Object> modelo = new HashMap<>();

@@ -1,132 +1,279 @@
-<#import "layout.ftl" as layout>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin - TechStore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<@layout.layout title="Dashboard - TechStore">
+    <!-- Bootstrap, FontAwesome y Google Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <style>
-        .dashboard-container {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
+        :root {
+            --primary: #2563eb;
+            --background: #f8fafc;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --text-color: #1e293b;
         }
 
-        .dashboard-actions {
-            margin-bottom: 2rem;
-        }
-
-        .productos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .producto-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .producto-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .producto-img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .producto-info {
-            padding: 1.25rem;
-        }
-
-        .producto-info h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.25rem;
-            color: #1e293b;
-        }
-
-        .precio {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2563eb;
-            margin: 1rem 0;
-        }
-
-        .acciones {
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
             display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            width: 250px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+            align-items: center;
+        }
+
+        .profile-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            background: none;
             border: none;
+            color: var(--primary);
+            cursor: pointer;
         }
 
-        .btn-primary {
-            background-color: #2563eb;
+        .menu {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .menu a:hover, .menu a.active {
+            background: var(--primary);
             color: white;
         }
 
-        .btn-secondary {
-            background-color: #0ea5e9;
-            color: white;
+        .sidebar.collapsed .menu a span {
+            display: none;
         }
 
-        .btn-danger {
+        /* Botón cerrar sesión */
+        .logout-btn {
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .logout-btn button {
+            width: 100%;
+            background-color: #ef4444;
+            border: none;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn button:hover {
             background-color: #dc2626;
-            color: white;
+        }
+
+        /* Main */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            flex-grow: 1;
+            transition: all 0.3s;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
         }
     </style>
+</head>
 
-    <div class="dashboard-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Dashboard Administrativo</h1>
-        </div>
-        
-        <div class="dashboard-actions">
-            <a href="/productos/nuevo" class="btn btn-primary" style="display: inline-flex; align-items: center; padding: 0.75rem 1.5rem; font-size: 1rem;">
-                <i class="fas fa-plus" style="margin-right: 0.5rem;"></i> Agregar Nuevo Producto
-            </a>
-            <p style="margin-top: 0.5rem; color: var(--text-light); font-size: 0.9rem;">
-                Haga clic en el botón para añadir un nuevo producto al catálogo
-            </p>
-        </div>
+<body>
 
-        <div class="productos-grid">
-            <#if productos?? && productos?size gt 0>
-                <#list productos as producto>
-                    <div class="producto-card">
-                        <img src="${producto.imagenUrl!'/img/default-product.jpg'}" 
-                             alt="${producto.nombre}"
-                             class="producto-img">
-                        <div class="producto-info">
-                            <h3>${producto.nombre}</h3>
-                            <p>${producto.descripcion}</p>
-                            <p class="precio">$${producto.precio?string(",##0.00")}</p>
-                            <div class="acciones">
-                                <a href="/productos/${producto.id}/editar" class="btn btn-secondary">
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <img src="${usuario.fotoPerfil!'/img/default-avatar.png'}" alt="Perfil" class="profile-img">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+
+    <nav class="menu">
+        <a href="#" id="linkProductos" class="active"><i class="fas fa-box"></i><span>Productos</span></a>
+        <a href="#" id="linkPedidos"><i class="fas fa-shopping-cart"></i><span>Pedidos</span></a>
+        <a href="#" id="linkPerfil"><i class="fas fa-user"></i><span>Mi Perfil</span></a>
+    </nav>
+
+    <div class="logout-btn">
+        <form action="/logout" method="post">
+            <button type="submit"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+        </form>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main-content" id="mainContent">
+
+    <!-- Productos -->
+    <div id="productosSection" class="section active">
+        <h1 class="mb-4">Gestión de Productos</h1>
+        <div class="row g-4">
+            <#list productos as producto>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <img src="${producto.imagenUrl!'/img/default-product.jpg'}" class="card-img-top" alt="${producto.nombre}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${producto.nombre}</h5>
+                            <p class="card-text text-muted">${producto.descripcion}</p>
+                            <p class="h5 text-primary mb-3">$${producto.precio?string(",##0.00")}</p>
+                            <div class="mt-auto d-flex gap-2">
+                                <a href="/productos/${producto.id}/editar" class="btn btn-outline-primary w-50">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
-                                <form action="/productos/${producto.id}/eliminar" method="post" 
-                                      style="display: inline-block;">
-                                    <button type="submit" class="btn btn-danger" 
-                                            onclick="return confirm('¿Estás seguro?')">
+                                <form action="/productos/${producto.id}/eliminar" method="post" class="w-50">
+                                    <button type="submit" class="btn btn-outline-danger w-100">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
-                </#list>
-            <#else>
-                <p class="no-productos">No hay productos disponibles</p>
-            </#if>
+                </div>
+            </#list>
         </div>
     </div>
-</@layout.layout>
+
+    <!-- Pedidos -->
+    <div id="pedidosSection" class="section">
+        <h1>Pedidos</h1>
+        <!-- Aquí tu contenido de pedidos -->
+    </div>
+
+    <!-- Perfil -->
+    <div id="perfilSection" class="section">
+        <h1 class="mb-4">Mi Perfil</h1>
+        <form action="/perfil/actualizar" method="post" enctype="multipart/form-data" class="card shadow-sm p-4">
+            <div class="text-center mb-4">
+                <img src="${usuario.fotoPerfil!'/img/default-avatar.png'}" class="rounded-circle" width="100" height="100" alt="Foto Perfil">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" class="form-control" value="${usuario.nombre}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Apellido</label>
+                <input type="text" name="apellido" class="form-control" value="${usuario.apellido}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Dirección</label>
+                <input type="text" name="direccion" class="form-control" value="${usuario.direccion}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Foto de Perfil</label>
+                <input type="file" name="fotoPerfil" class="form-control">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <a href="/" class="btn btn-outline-secondary w-50">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const links = document.querySelectorAll('.menu a');
+    const sections = document.querySelectorAll('.section');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    links.forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            links.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            const id = link.id.replace('link', '').toLowerCase() + 'Section';
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        });
+    });
+</script>
+
+</body>
+</html>

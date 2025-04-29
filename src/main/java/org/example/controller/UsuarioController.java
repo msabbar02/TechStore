@@ -15,55 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class UsuarioController {
+
     private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
     
     // Caché de sesiones para reducir consultas a la base de datos
     private static final Map<Integer, Usuario> CACHE_USUARIOS = new ConcurrentHashMap<>(50);
-    private static final long CACHE_TIMEOUT_MS = 300000; // 5 minutos
-    private static final Map<Integer, Long> CACHE_TIMESTAMPS = new ConcurrentHashMap<>(50);
-    
-    /**
-     * Método optimizado para obtener usuario desde la caché o base de datos
-     */
-    public static Usuario obtenerUsuarioOptimizado(int id) {
-        // Verificar si está en caché y si es válido
-        Usuario cachedUser = CACHE_USUARIOS.get(id);
-        Long timestamp = CACHE_TIMESTAMPS.get(id);
-        
-        // Si está en caché y aún es válido
-        if (cachedUser != null && timestamp != null && 
-            System.currentTimeMillis() - timestamp < CACHE_TIMEOUT_MS) {
-            return cachedUser;
-        }
-        
-        // Si no está en caché o expiró, consultarlo y almacenarlo
-        Usuario usuario = UsuarioDAO.obtenerPorId(id);
-        if (usuario != null) {
-            CACHE_USUARIOS.put(id, usuario);
-            CACHE_TIMESTAMPS.put(id, System.currentTimeMillis());
-        }
-        
-        return usuario;
-    }
-    
-    /**
-     * Método para actualizar la caché después de modificar un usuario
-     */
-    public static void actualizarCacheUsuario(Usuario usuario) {
-        if (usuario != null && usuario.getId() > 0) {
-            CACHE_USUARIOS.put(usuario.getId(), usuario);
-            CACHE_TIMESTAMPS.put(usuario.getId(), System.currentTimeMillis());
-        }
-    }
-    
-    /**
-     * Método para invalidar la caché de un usuario
-     */
-    public static void invalidarCacheUsuario(int id) {
-        CACHE_USUARIOS.remove(id);
-        CACHE_TIMESTAMPS.remove(id);
-    }
+    public static final long CACHE_TIMEOUT_MS = 300000; // 5 minutos
+    public static final Map<Integer, Long> CACHE_TIMESTAMPS = new ConcurrentHashMap<>(50);
 
+    /**
+     * Muestra el perfil del usuario actual
+     */
     public static void mostrarPerfil(Context ctx) {
         Usuario usuario = ctx.sessionAttribute("usuario");
         if (usuario == null) {
@@ -167,19 +129,19 @@ public class UsuarioController {
                     String nombreArchivo = System.currentTimeMillis() + "_" + usuarioActual.getUsername() + extension;
                     
                     // Asegurarse de que exista el directorio
-                    File uploadDir = new File("uploads/usuarios");
+                    File uploadDir = new File("src/main/resources/static/img");
                     if (!uploadDir.exists()) {
                         uploadDir.mkdirs();
                     }
                     
                     // Guardar el archivo
-                    String rutaArchivo = "uploads/usuarios/" + nombreArchivo;
+                    String rutaArchivo = "src/main/resources/static/img/" + nombreArchivo;
                     FileUtil.streamToFile(uploadedFile.content(), rutaArchivo);
                     
                     // Eliminar foto anterior si existe y no es la predeterminada
                     String fotoAnterior = usuarioActual.getFotoPerfil();
                     if (fotoAnterior != null && !fotoAnterior.contains("default-avatar")) {
-                        String rutaAnterior = fotoAnterior.replace("/uploads/", "uploads/");
+                        String rutaAnterior = fotoAnterior.replace("/img/", "src/main/resources/static/img/");
                         File fileAnterior = new File(rutaAnterior);
                         if (fileAnterior.exists()) {
                             fileAnterior.delete();
@@ -187,7 +149,7 @@ public class UsuarioController {
                     }
                     
                     // Actualizar la URL de la foto de perfil
-                    usuarioActual.setFotoPerfil("/uploads/usuarios/" + nombreArchivo);
+                    usuarioActual.setFotoPerfil("/img/" + nombreArchivo);
                     logger.info("Foto de perfil actualizada para usuario: {}", usuarioActual.getUsername());
                 } catch (Exception e) {
                     logger.error("Error al guardar la foto de perfil: ", e);

@@ -19,7 +19,7 @@ public class Producto {
     private String descripcion;
 
     @Column(nullable = false)
-    private double precio;
+    private double precio; // Valor por defecto
 
     @Column(name = "imagenUrl")
     private String imagenUrl;
