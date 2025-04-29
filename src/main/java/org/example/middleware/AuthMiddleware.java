@@ -23,17 +23,10 @@ import org.slf4j.LoggerFactory;
         // Verifica si el usuario es admin
         public static void soloAdmin(Context ctx) {
             Usuario usuario = ctx.sessionAttribute("usuario");
-            logger.info("Verificando permisos de admin para: {}", 
-                (usuario != null ? usuario.getUsername() + " (Rol: " + usuario.getRol() + ")" : "usuario null"));
-            
             if (usuario == null || !"admin".equalsIgnoreCase(usuario.getRol())) {
-                logger.warn("Acceso denegado al dashboard para: {}", 
-                    (usuario != null ? usuario.getUsername() + " (Rol: " + usuario.getRol() + ")" : "usuario null"));
                 ctx.status(403);
                 ctx.attribute("error", "No tienes permisos para acceder a esta página.");
                 ctx.render("error.ftl");
-            } else {
-                logger.info("Acceso permitido al dashboard para admin: {}", usuario.getUsername());
             }
         }
     }

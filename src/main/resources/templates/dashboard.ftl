@@ -181,6 +181,7 @@
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <img src="${usuario.fotoPerfil!'/img/default-avatar.png'}" alt="Perfil" class="profile-img">
+    <h2 class="text-center text-primary">${usuario.nombre!''} ${usuario.apellido!''}</h2>
     <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
 
     <nav class="menu">
@@ -200,8 +201,34 @@
 <div class="main-content" id="mainContent">
 
     <!-- Productos -->
+
     <div id="productosSection" class="section active">
         <h1 class="mb-4">Gestión de Productos</h1>
+        <!-- Buscador y Categorías -->
+        <div class="mb-4">
+            <form class="d-flex mb-3" method="get" action="/dashboard">
+                <input type="text" name="buscar" class="form-control me-2" placeholder="Buscar producto..." value="${buscar!}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </form>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/dashboard" class="btn btn-sm <#if categoria?? && categoria == 'ALL'>btn-primary<#else>btn-outline-secondary</#if>">ALL</a>
+                <a href="/dashboard?categoria=PC" class="btn btn-sm <#if categoria?? && categoria == 'PC'>btn-primary<#else>btn-outline-secondary</#if>">PC</a>
+                <a href="/dashboard?categoria=TABLET" class="btn btn-sm <#if categoria?? && categoria == 'TABLET'>btn-primary<#else>btn-outline-secondary</#if>">TABLET</a>
+                <a href="/dashboard?categoria=SMARTPHONE" class="btn btn-sm <#if categoria?? && categoria == 'SMARTPHONE'>btn-primary<#else>btn-outline-secondary</#if>">SMARTPHONE</a>
+                <!-- Agrega más categorías si quieres -->
+            </div>
+        </div>
+
+        <!-- Botón Añadir Producto -->
+        <div class="mb-4 d-flex justify-content-end">
+            <a href="/productos/nuevo" class="btn btn-success">
+                <i class="fas fa-plus"></i> Añadir Producto
+            </a>
+        </div>
+
         <div class="row g-4">
             <#list productos as producto>
                 <div class="col-md-6 col-lg-4">
@@ -211,16 +238,23 @@
                             <h5 class="card-title">${producto.nombre}</h5>
                             <p class="card-text text-muted">${producto.descripcion}</p>
                             <p class="h5 text-primary mb-3">$${producto.precio?string(",##0.00")}</p>
+                            <p class="h5 text-primary mb-4">Existencias: ${producto.existencias}</p>
+
                             <div class="mt-auto d-flex gap-2">
+                                <!-- Botón Editar -->
                                 <a href="/productos/${producto.id}/editar" class="btn btn-outline-primary w-50">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
-                                <form action="/productos/${producto.id}/eliminar" method="post" class="w-50">
-                                    <button type="submit" class="btn btn-outline-danger w-100">
+
+                                <!-- Botón Eliminar -->
+
+                                <form id="eliminarForm${producto.id}" action="/productos/${producto.id}/eliminar" method="post" class="w-50">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarProducto(${producto.id})">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </form>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -229,49 +263,92 @@
     </div>
 
 
+
     <!-- Pedidos Section -->
     <div id="pedidosSection" class="section">
         <h1 class="mb-4">Gestión de Pedidos</h1>
-        <div class="row g-4">
-            <#if ordenes?? && ordenes?size gt 0>
-                <#list ordenes as orden>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <h5 class="card-title">Pedido #${orden.id}</h5>
-                                    <p><i class="fas fa-user me-2"></i>
-                                        ${orden.usuario.nombre} ${orden.usuario.apellido}
-                                    </p>
-                                    <p><i class="fas fa-calendar-alt me-2"></i>
-                                        ${orden.fecha?string('dd/MM/yyyy HH:mm')}
-                                    </p>
-                                    <p><i class="fas fa-dollar-sign me-2"></i>
-                                        Total: $${orden.total?string(",##0.00")}
-                                    </p>
-                                </div>
-                                <div class="mt-3 d-flex justify-content-between align-items-center">
-                                <span class="badge
-                                    <#if orden.estado?upper_case == 'COMPLETADA'>bg-success<#else>bg-warning</#if>">
-                                    ${orden.estado}
-                                </span>
-                                    <a href="/orden/${orden.id}" class="btn btn-outline-primary btn-sm">
+
+        <#attempt>
+            <#if ordenes?? && ordenes?has_content>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-primary text-center">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Estado Actual</th>
+                            <th>Cambiar Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <#list ordenes as orden>
+                            <tr class="text-center">
+                                <td>#${orden.id!''}</td>
+                                <td>${orden.usuario.nombre!''} ${orden.usuario.apellido!''}</td>
+
+                                <td>
+                                    <#if orden.fechaFormateada??>
+                                        ${orden.fechaFormateada}
+                                    <#else>
+                                        -
+                                    </#if>
+                                </td>
+
+                                <td>$${orden.total?string(",##0.00")}</td>
+
+                                <td>
+                                    <span class="badge
+                                        <#if (orden.estado!'PENDIENTE')?upper_case == 'COMPLETADA'>
+                                            bg-success
+                                        <#elseif (orden.estado!'PENDIENTE')?upper_case == 'CANCELADA'>
+                                            bg-danger
+                                        <#else>
+                                            bg-warning
+                                        </#if>">
+                                        ${orden.estado!'PENDIENTE'}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <form action="/admin/orden/${orden.id}/estado" method="post" class="d-flex gap-2 justify-content-center">
+                                        <select name="estado" class="form-select form-select-sm w-auto">
+                                            <option value="PENDIENTE" <#if orden.estado == "PENDIENTE">selected</#if>>Pendiente</option>
+                                            <option value="COMPLETADA" <#if orden.estado == "COMPLETADA">selected</#if>>Completada</option>
+                                            <option value="CANCELADA" <#if orden.estado == "CANCELADA">selected</#if>>Cancelada</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <a href="/orden/${orden.id}" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-eye"></i> Ver
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </#list>
+                                </td>
+                            </tr>
+                        </#list>
+                        </tbody>
+                    </table>
+                </div>
             <#else>
-                <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        No hay pedidos registrados aún.
-                    </div>
+                <div class="alert alert-info text-center">
+                    No hay pedidos registrados aún.
                 </div>
             </#if>
-        </div>
+            <#recover>
+                <div class="alert alert-danger text-center">
+                    Error al cargar los pedidos. Por favor, intente más tarde.
+                </div>
+        </#recover>
     </div>
+
+
+
 
 
 
@@ -332,6 +409,15 @@
             document.getElementById(id).classList.add('active');
         });
     });
+
+    function editarProducto(id) {
+        window.location.href = '/productos/' + id + '/editar';
+    }
+    function eliminarProducto(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+            document.getElementById('eliminarForm' + id).submit();
+        }
+    }
 </script>
 
 </body>

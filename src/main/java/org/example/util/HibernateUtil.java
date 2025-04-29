@@ -29,15 +29,15 @@ public class HibernateUtil {
             
             // Crear configuración programática en lugar de usar XML
             Configuration configuration = new Configuration();
-            
+
             // Configurar propiedades de Hibernate
             Properties settings = new Properties();
-            settings.put(Environment.DRIVER, "org.h2.Driver");
-            settings.put(Environment.URL, "jdbc:h2:./techstoredb;DB_CLOSE_DELAY=-1");
-            settings.put(Environment.USER, "sa");
-            settings.put(Environment.PASS, "");
-            settings.put(Environment.DIALECT, "org.hibernate.dialect.H2Dialect");
-            
+            settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
+            settings.put(Environment.URL, "jdbc:mysql://localhost:3306/techstore?serverTimezone=UTC");
+            settings.put(Environment.USER, "root");
+            settings.put(Environment.PASS, "root");
+            settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+
             // Otras configuraciones
             settings.put(Environment.SHOW_SQL, "true");
             settings.put(Environment.FORMAT_SQL, "true");

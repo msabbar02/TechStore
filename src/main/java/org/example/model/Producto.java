@@ -25,7 +25,11 @@ public class Producto {
     private String imagenUrl;
     
     @Column(nullable = false)
-    private int existencias = 10; // Valor por defecto
+    private int existencias = 10;
+
+    @Column(nullable = false)
+    private String categoria;
+
 
     public Producto() {
     }

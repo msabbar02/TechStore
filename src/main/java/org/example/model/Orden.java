@@ -25,6 +25,9 @@ public class Orden {
     
     @Column(name = "total")
     private Double total;
+
+    @Transient
+    private String fechaFormateada;
     
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DetalleOrden> detalles;
@@ -91,6 +94,12 @@ public class Orden {
             subtotal += detalle.getSubtotal();
         }
         return subtotal;
+    }
+    public String getFechaFormateada() {
+        return fechaFormateada;
+    }
+    public void setFechaFormateada(String fechaFormateada) {
+        this.fechaFormateada = fechaFormateada;
     }
 }
 

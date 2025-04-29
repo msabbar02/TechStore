@@ -7,6 +7,7 @@ import org.example.model.Orden;
 import org.example.model.Producto;
 import org.example.model.Usuario;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ public class ProductoController {
      * Método para mostrar el dashboard administrativo
      */
     public static void mostrarDashboard(Context ctx) {
+
         try {
             logger.info("Iniciando carga del dashboard administrativo");
             
@@ -58,6 +60,14 @@ public class ProductoController {
             List<Orden> ordenes = new ArrayList<>();
             try {
                 ordenes = OrdenDAO.obtenerTodasOrdenes();
+                // Formatear las fechas de las órdenes
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                for (Orden orden : ordenes) {
+                    if (orden.getFecha() != null) {
+                        orden.setFechaFormateada(orden.getFecha().format(formatter));
+                    }
+                }
+
                 logger.info("Órdenes cargadas: {}", ordenes.size());
             } catch (Exception e) {
                 logger.warn("Error al cargar órdenes: {}", e.getMessage());

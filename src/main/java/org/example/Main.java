@@ -43,6 +43,7 @@ public class Main {
         logger.info("Iniciando aplicación en el puerto 7000");
         app.start(7000);
         logger.info("Aplicación iniciada en el puerto 7000");
+        System.out.println("Aplicación iniciada en el puerto 7000: http://localhost:7000");
     }
     
     /**
@@ -252,17 +253,18 @@ public class Main {
 
         // Rutas para administradores
         app.get("/dashboard", ProductoController::mostrarDashboard);
-        app.get("/admin/productos", ProductoController::listarProductos);
-        app.get("/admin/producto/nuevo", ProductoController::formularioNuevo);
-        app.post("/admin/producto/crear", ProductoController::crearProducto);
-        app.get("/admin/producto/{id}/editar", ProductoController::formularioEditar);
-        app.post("/admin/producto/{id}/actualizar", ProductoController::actualizarProducto);
-        app.post("/admin/producto/{id}/eliminar", ProductoController::eliminarProducto);
+        app.get("/productos", ProductoController::listarProductos);
+        app.get("/productos/nuevo", ProductoController::formularioNuevo);   // <--- corregido
+        app.post("/productos/guardar", ProductoController::crearProducto);  // <--- corregido
+        app.get("/productos/{id}/editar", ProductoController::formularioEditar);  // <--- corregido
+        app.post("/productos/{id}/actualizar", ProductoController::actualizarProducto);  // <--- corregido
+        app.post("/productos/{id}/eliminar", ProductoController::eliminarProducto);  // <--- corregido
 
         // API de productos
         app.get("/api/productos", ProductoController::obtenerTodosProductos);
         app.get("/api/producto/{id}", ProductoController::obtenerProducto);
     }
+
     
     /**
      * Configura las rutas relacionadas con usuarios y perfiles
@@ -293,7 +295,8 @@ public class Main {
         app.post("/orden/crear", OrdenController::crearOrden);
         app.get("/orden/{id}", OrdenController::mostrarOrden);
         app.get("/ordenes", OrdenController::listarOrdenes);
-        
+
+
         // Gestión de órdenes (admin)
         app.get("/admin/ordenes", OrdenController::listarTodasOrdenes);
         app.post("/admin/orden/{id}/estado", OrdenController::actualizarEstadoOrden);
