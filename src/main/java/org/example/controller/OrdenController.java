@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class OrdenController {
     private static final Logger logger = LoggerFactory.getLogger(OrdenController.class);
-    private static final Map<Integer, Producto> CACHE_PRODUCTOS = new ConcurrentHashMap<>(50);
-    private static final Map<Integer, Long> CACHE_TIMESTAMPS = new ConcurrentHashMap<>(50);
-    private static final long CACHE_TIMEOUT_MS = 300000; // 5 minutos
+
+    // En OrdenController.java
+    // En OrdenController.java
     public static void listarOrdenes(Context ctx) {
         try {
             Usuario usuario = ctx.sessionAttribute("usuario");
@@ -28,15 +28,16 @@ public class OrdenController {
             }
 
             List<Orden> ordenes = OrdenDAO.obtenerOrdenesDeUsuario((long) usuario.getId());
-            
+
             Map<String, Object> modelo = new HashMap<>();
             modelo.put("ordenes", ordenes);
             modelo.put("usuario", usuario);
-            
-            ctx.render("ordenes.ftl", modelo);
-            logger.info("Mostrando órdenes para el usuario: {}", usuario.getUsername());
+
+            // Cambiar a una plantilla específica de órdenes
+            ctx.render("/lista.ftl", modelo);
+
         } catch (Exception e) {
-            logger.error("Error al cargar las órdenes: ", e);
+            logger.error("Error al cargar las órdenes: {}", e.getMessage());
             ctx.status(500);
             ctx.result("Error al cargar las órdenes");
         }
@@ -127,26 +128,17 @@ public class OrdenController {
         }
     }
 
-    public static void actualizarEstadoOrden(@NotNull Context context) {
-        try {
-            Long ordenId = Long.parseLong(context.pathParam("id"));
-            String nuevoEstado = context.formParam("estado");
+    public static void actualizarEstadoOrden(Context ctx) {
+        Long idOrden = Long.parseLong(ctx.pathParam("id"));
+        String nuevoEstado = ctx.formParam("estado");
 
-            Orden orden = OrdenDAO.obtenerPorId(ordenId);
-            if (orden == null) {
-                context.status(404);
-                context.result("Orden no encontrada");
-                return;
-            }
-
-            orden.setEstado(nuevoEstado);
+        Orden orden = OrdenDAO.obtenerPorId(idOrden);
+        if (orden != null) {
+            orden.setEstado(nuevoEstado.toUpperCase());
             OrdenDAO.actualizar(orden);
-
-            context.redirect("/ordenes");
-        } catch (Exception e) {
-            e.printStackTrace();
-            context.status(500);
-            context.result("Error al actualizar el estado de la orden");
         }
+
+        ctx.redirect("/dashboard#pedidosSection");
     }
+
 }

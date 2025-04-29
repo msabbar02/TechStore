@@ -37,8 +37,12 @@ public class ProductoDAO {
         long startTime = System.currentTimeMillis();
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.persist(producto);
+            session.save(producto);
             tx.commit();
+
+            // Almacenar en caché
+            PRODUCTOS_CACHE.put(producto.getId(), producto);
+            CACHE_TIMESTAMP.put(producto.getId(), System.currentTimeMillis());
 
             // Invalidar caché de listado
             ALL_PRODUCTOS_CACHE = null;
@@ -58,7 +62,7 @@ public class ProductoDAO {
         long startTime = System.currentTimeMillis();
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = session.beginTransaction();
-            session.merge(producto);
+            session.update(producto);
             tx.commit();
 
             // Actualizar caché
@@ -214,34 +218,21 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtener productos por categoría
+     * Filtrar productos por categoría
      */
-    public static List<Producto> obtenerPorCategoria(String categoria) {
-        if (categoria == null || categoria.trim().isEmpty()) {
-            return obtenerTodos();
-        }
-
-        long startTime = System.currentTimeMillis();
+    public static List<Producto> filtrarPorCategoria(String categoria) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Query<Producto> query = session.createQuery(
-                    "FROM Producto WHERE categoria = :categoria",
-                    Producto.class
+                    "FROM Producto WHERE categoria = :categoria", Producto.class
             );
-            query.setParameter("categoria", categoria);
-            query.setCacheable(true);
-
-            List<Producto> resultados = query.list();
-
-            long endTime = System.currentTimeMillis();
-            logger.debug("Listado para categoría '{}' completado en {}ms, {} resultados",
-                    categoria, (endTime - startTime), resultados.size());
-
-            return resultados;
+            query.setParameter("categoria", categoria.toUpperCase());
+            return query.list();
         } catch (Exception e) {
-            logger.error("Error al obtener productos por categoría '{}': {}",
-                    categoria, e.getMessage());
+            logger.error("Error al filtrar productos por categoría '{}': {}", categoria, e.getMessage());
             return new ArrayList<>();
         }
     }
+
+
 }
    

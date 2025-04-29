@@ -8,6 +8,8 @@ import org.example.util.FileUtil;
 import org.example.util.PasswordUtil;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,134 +56,74 @@ public class UsuarioController {
         
         ctx.render("perfil.ftl", model);
     }
-    
+
     public static void actualizarPerfil(Context ctx) {
         Usuario usuarioSesion = ctx.sessionAttribute("usuario");
-        
+
         if (usuarioSesion == null) {
             logger.warn("Intento de actualizar perfil sin sesión");
             ctx.redirect("/login");
             return;
         }
-    
+
         try {
-            // Obtener el usuario fresco desde la base de datos para evitar problemas de entidades desconectadas
             Usuario usuarioActual = UsuarioDAO.obtenerPorId(usuarioSesion.getId());
             if (usuarioActual == null) {
-                logger.error("No se encontró el usuario en la base de datos: {}", usuarioSesion.getId());
-                ctx.sessionAttribute("error", "Error al actualizar el perfil: Usuario no encontrado");
+                ctx.sessionAttribute("error", "Usuario no encontrado");
                 ctx.redirect("/perfil");
                 return;
             }
-            
-            logger.info("Actualizando perfil para usuario: {} (ID: {})", usuarioActual.getUsername(), usuarioActual.getId());
-            
-            // Obtener datos del formulario
-            String nombre = ctx.formParam("nombre");
-            String apellido = ctx.formParam("apellido");
-            String direccion = ctx.formParam("direccion");
-            String newPassword = ctx.formParam("newPassword");
-            
+
             // Actualizar campos básicos
-            if (nombre != null && !nombre.trim().isEmpty()) {
-                usuarioActual.setNombre(nombre.trim());
-                logger.info("Nombre actualizado: {}", nombre.trim());
-            }
-            
-            if (apellido != null && !apellido.trim().isEmpty()) {
-                usuarioActual.setApellido(apellido.trim());
-                logger.info("Apellido actualizado: {}", apellido.trim());
-            }
-            
-            if (direccion != null) { // Permitir dirección vacía
-                usuarioActual.setDireccion(direccion.trim());
-                logger.info("Dirección actualizada: {}", direccion.trim());
-            }
-            
+            usuarioActual.setNombre(ctx.formParam("nombre"));
+            usuarioActual.setApellido(ctx.formParam("apellido"));
+            usuarioActual.setDireccion(ctx.formParam("direccion"));
+
+            // Manejar nueva contraseña si se proporciona
+            String newPassword = ctx.formParam("newPassword");
             if (newPassword != null && !newPassword.trim().isEmpty()) {
-                String hashedPassword = PasswordUtil.hashPassword(newPassword);
-                System.out.println("Nueva contraseña hasheada: " + hashedPassword);
-                usuarioActual.setPassword(hashedPassword);
-                logger.info("Contraseña actualizada para usuario: {}", usuarioActual.getUsername());
+                usuarioActual.setPassword(PasswordUtil.hashPassword(newPassword));
             }
-            
+
             // Procesar la foto de perfil
-            UploadedFile uploadedFile = ctx.uploadedFile("fotoPerfil");
-            if (uploadedFile != null && uploadedFile.size() > 0) {
-                try {
-                    // Validar tamaño máximo (2MB)
-                    if (uploadedFile.size() > 2 * 1024 * 1024) {
-                        throw new IllegalArgumentException("La imagen no debe superar los 2MB");
-                    }
-                    
-                    // Validar tipo de archivo
-                    String contentType = uploadedFile.contentType();
-                    if (contentType == null || !(
-                        contentType.equals("image/jpeg") || 
-                        contentType.equals("image/png") || 
-                        contentType.equals("image/gif"))) {
-                        throw new IllegalArgumentException("Formato de imagen no válido. Use JPG, PNG o GIF");
-                    }
-                    
-                    // Generar nombre único para la imagen
-                    String nombreOriginal = uploadedFile.filename();
-                    String extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
-                    String nombreArchivo = System.currentTimeMillis() + "_" + usuarioActual.getUsername() + extension;
-                    
-                    // Asegurarse de que exista el directorio
-                    File uploadDir = new File("src/main/resources/static/img");
-                    if (!uploadDir.exists()) {
-                        uploadDir.mkdirs();
-                    }
-                    
-                    // Guardar el archivo
-                    String rutaArchivo = "src/main/resources/static/img/" + nombreArchivo;
-                    FileUtil.streamToFile(uploadedFile.content(), rutaArchivo);
-                    
-                    // Eliminar foto anterior si existe y no es la predeterminada
-                    String fotoAnterior = usuarioActual.getFotoPerfil();
-                    if (fotoAnterior != null && !fotoAnterior.contains("default-avatar")) {
-                        String rutaAnterior = fotoAnterior.replace("/img/", "src/main/resources/static/img/");
-                        File fileAnterior = new File(rutaAnterior);
-                        if (fileAnterior.exists()) {
-                            fileAnterior.delete();
-                        }
-                    }
-                    
-                    // Actualizar la URL de la foto de perfil
-                    usuarioActual.setFotoPerfil("/img/" + nombreArchivo);
-                    logger.info("Foto de perfil actualizada para usuario: {}", usuarioActual.getUsername());
-                } catch (Exception e) {
-                    logger.error("Error al guardar la foto de perfil: ", e);
-                    // Continuamos con el resto de la actualización sin establecer un mensaje de error
+            UploadedFile foto = ctx.uploadedFile("fotoPerfil");
+            if (foto != null && foto.size() > 0) {
+                String nombreArchivo = System.currentTimeMillis() + "_" +
+                        usuarioActual.getUsername() + "_" +
+                        foto.filename();
+                String rutaGuardado = "uploads/usuarios/" + nombreArchivo;
+
+                // Asegurar que el directorio existe
+                new File("uploads/usuarios").mkdirs();
+
+                // Guardar el archivo
+                try (InputStream input = foto.content();
+                     FileOutputStream output = new FileOutputStream(rutaGuardado)) {
+                    input.transferTo(output);
                 }
+
+                // Actualizar la URL de la foto en el usuario
+                usuarioActual.setFotoPerfil("/uploads/usuarios/" + nombreArchivo);
             }
-    
+
             // Guardar cambios
-            try {
-                logger.info("Guardando cambios en la base de datos para usuario ID: {}", usuarioActual.getId());
-                UsuarioDAO.actualizar(usuarioActual);
-                logger.info("Perfil actualizado correctamente en la base de datos para: {}", usuarioActual.getUsername());
-            } catch (Exception e) {
-                logger.error("Error al guardar en la base de datos: {}", e.getMessage(), e);
-                throw new RuntimeException("Error al guardar los cambios en la base de datos", e);
-            }
-    
-            // Actualizar la sesión con los datos nuevos
+            UsuarioDAO.actualizar(usuarioActual);
+
+            // Actualizar la sesión con el usuario actualizado
             ctx.sessionAttribute("usuario", usuarioActual);
-            
-            // Mensaje de éxito
-            ctx.sessionAttribute("mensaje", "¡Perfil actualizado correctamente!");
-            
-            // Redirigir a la página correspondiente según el rol del usuario
+
+            // Agregar mensaje de éxito
+            ctx.sessionAttribute("mensaje", "Perfil actualizado correctamente");
+
+            // Redireccionar según el rol
             if ("admin".equalsIgnoreCase(usuarioActual.getRol())) {
                 ctx.redirect("/dashboard");
             } else {
-                ctx.redirect("/catalogo_simple");  // Redirección corregida
+                ctx.redirect("/catalogo_simple");
             }
-            
+
         } catch (Exception e) {
-            logger.error("Error al actualizar perfil: {}", e.getMessage(), e);
+            logger.error("Error al actualizar perfil: {}", e.getMessage());
             ctx.sessionAttribute("error", "Error al actualizar el perfil: " + e.getMessage());
             ctx.redirect("/perfil");
         }
