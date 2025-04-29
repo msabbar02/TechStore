@@ -155,6 +155,24 @@
                 margin-left: 0;
             }
         }
+
+         .card {
+             border-radius: 16px;
+             transition: all 0.3s ease;
+         }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+
     </style>
 </head>
 
@@ -210,11 +228,52 @@
         </div>
     </div>
 
-    <!-- Pedidos -->
+
+    <!-- Pedidos Section -->
     <div id="pedidosSection" class="section">
-        <h1>Pedidos</h1>
-        <!-- Aquí tu contenido de pedidos -->
+        <h1 class="mb-4">Gestión de Pedidos</h1>
+        <div class="row g-4">
+            <#if ordenes?? && ordenes?size gt 0>
+                <#list ordenes as orden>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <h5 class="card-title">Pedido #${orden.id}</h5>
+                                    <p><i class="fas fa-user me-2"></i>
+                                        ${orden.usuario.nombre} ${orden.usuario.apellido}
+                                    </p>
+                                    <p><i class="fas fa-calendar-alt me-2"></i>
+                                        ${orden.fecha?string('dd/MM/yyyy HH:mm')}
+                                    </p>
+                                    <p><i class="fas fa-dollar-sign me-2"></i>
+                                        Total: $${orden.total?string(",##0.00")}
+                                    </p>
+                                </div>
+                                <div class="mt-3 d-flex justify-content-between align-items-center">
+                                <span class="badge
+                                    <#if orden.estado?upper_case == 'COMPLETADA'>bg-success<#else>bg-warning</#if>">
+                                    ${orden.estado}
+                                </span>
+                                    <a href="/orden/${orden.id}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </#list>
+            <#else>
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        No hay pedidos registrados aún.
+                    </div>
+                </div>
+            </#if>
+        </div>
     </div>
+
+
 
     <!-- Perfil -->
     <div id="perfilSection" class="section">
