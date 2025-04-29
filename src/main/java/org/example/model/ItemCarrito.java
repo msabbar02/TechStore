@@ -6,7 +6,7 @@ public class ItemCarrito {
     private Producto producto;
     private int cantidad;
     private double precioUnitario;
-    private static double subtotal;
+    private double subtotal;
 
     public ItemCarrito() {
     }
@@ -47,8 +47,12 @@ public class ItemCarrito {
         this.calcularSubtotal();
     }
 
-    public static double getSubtotal() {
+    public double getSubtotal() {
         return subtotal;
+    }
+    
+    public void setSubtotal(double subtotal) {
+        this.subtotal = subtotal;
     }
 
     // Método para calcular el subtotal
@@ -71,6 +75,4 @@ public class ItemCarrito {
         }
         return false;
     }
-
-
 }

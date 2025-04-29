@@ -1,49 +1,105 @@
-<#import "layout.ftl" as layout>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Carrito de Compras - TechStore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<@layout.layout title="Carrito de Compras - TechStore">
+    <!-- Bootstrap, FontAwesome, SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.5/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb;
+            --success: #059669;
+            --background: #f8fafc;
+            --white: #ffffff;
+            --text: #1e293b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            background: var(--background);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
         }
 
-        .carrito-container {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            font-weight: 600;
+            color: var(--text);
+            margin-left: 1.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .cart-icon-container {
+            position: relative;
+        }
+
+        #cart-counter {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: red;
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            margin-left: 1.5rem;
         }
 
         h1 {
-            color: #1e293b;
-            margin-bottom: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            font-weight: 700;
         }
 
-        .carrito-tabla {
+        table {
+            background: var(--white);
             width: 100%;
-            background: white;
             border-radius: 12px;
+            box-shadow: var(--shadow);
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
 
-        .carrito-tabla th,
-        .carrito-tabla td {
+        th, td {
             padding: 1rem;
-            text-align: left;
+            text-align: center;
             border-bottom: 1px solid #e2e8f0;
         }
 
-        .carrito-tabla th {
-            background-color: #f8fafc;
-            font-weight: 600;
+        th {
+            background-color: #f1f5f9;
         }
 
         .producto-img {
@@ -53,232 +109,205 @@
             border-radius: 8px;
         }
 
-        .cantidad-input {
-            width: 80px;
-            padding: 0.5rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            text-align: center;
-        }
-
         .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-eliminar {
-            background-color: #dc2626;
-            color: white;
-        }
-
-        .btn-actualizar {
-            background-color: #0ea5e9;
-            color: white;
-        }
-
-        .btn-seguir-comprando {
-            background-color: #2563eb;
-            color: white;
-            margin-right: 1rem;
-        }
-
-        .btn-finalizar {
-            background-color: #059669;
-            color: white;
-        }
-
-        .total {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            text-align: right;
-            font-size: 1.25rem;
             font-weight: 600;
         }
 
-        .acciones {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
+        .btn-cantidad {
+            background: var(--primary);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: none;
         }
 
-        @media (max-width: 768px) {
-            .carrito-tabla {
-                display: block;
-                overflow-x: auto;
-            }
+        .btn-cantidad:hover {
+            background: #1e40af;
+        }
 
-            .acciones {
-                flex-direction: column;
-            }
+        .btn-eliminar {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
 
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+        .btn-eliminar:hover {
+            background: #b91c1c;
+        }
+
+        .formulario-compra {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .formulario-compra input {
+            width: 100%;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .btn-finalizar {
+            background: var(--success);
+            color: var(--white);
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-finalizar:hover {
+            background: #047857;
         }
     </style>
 </head>
+
 <body>
-    <div class="carrito-container">
-        <h1><i class="fas fa-shopping-cart"></i> Carrito de Compras</h1>
-        
-        <#if items?? && items?size gt 0>
-            <table class="carrito-tabla">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-laptop"></i> TechStore</a>
+
+        <div class="d-flex align-items-center ms-auto">
+            <a class="nav-link cart-icon-container" href="/carrito" title="Carrito">
+                <i class="fas fa-shopping-cart fa-lg"></i>
+                <span id="cart-counter"></span>
+            </a>
+
+            <a class="nav-link" href="/ordenes">
+                <i class="fas fa-box"></i> Mis Pedidos
+            </a>
+
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                    <img src="${usuario.fotoPerfil!'/img/default-profile.jpg'}" alt="Perfil" class="profile-img">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/perfil"><i class="fas fa-id-card"></i> Perfil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="/logout" method="post" class="dropdown-item p-0">
+                            <button type="submit" class="btn btn-link dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Carrito -->
+<h1>Mi Carrito</h1>
+
+<div class="container">
+    <#if items?? && items?size gt 0>
+        <div class="table-responsive">
+            <table class="table align-middle">
                 <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Nombre</th>
-                        <th>Precio</th>
-                        <th>Cantidad</th>
-                        <th>Subtotal</th>
-                        <th>Acciones</th>
-                    </tr>
+                <tr>
+                    <th>Producto</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
                 </thead>
                 <tbody>
-                    <#list items as item>
-                        <tr>
-                            <td>
-                                <img src="${item.producto.imagenUrl!'/img/default-product.jpg'}" 
-                                     alt="${item.producto.nombre}" 
-                                     class="producto-img">
-                            </td>
-                            <td>${item.producto.nombre}</td>
-                            <td>$${item.producto.precio?string(",##0.00")}</td>
-                            <td>
-                                <form action="/carrito/${item.producto.id}/actualizar" method="post" style="display: inline;">
-                                    <input type="number" name="cantidad" 
-                                           value="${item.cantidad}" 
-                                           min="1" 
-                                           class="cantidad-input"
-                                           onchange="this.form.submit()">
+                <#list items as item>
+                    <tr>
+                        <td>
+                            <img src="${item.producto.imagenUrl!'/img/default-product.jpg'}" alt="${item.producto.nombre}" class="producto-img">
+                        </td>
+                        <td>${item.producto.nombre}</td>
+                        <td>$${item.producto.precio?string(",##0.00")}</td>
+                        <td>
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+                                <form action="/carrito/${item.producto.id}/decrementar" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-cantidad">-</button>
                                 </form>
-                            </td>
-                            <td>$${(item.producto.precio * item.cantidad)?string(",##0.00")}</td>
-                            <td>
-                                <form action="/carrito/${item.producto.id}/eliminar" method="post" style="display: inline;">
-                                    <button type="submit" class="btn btn-eliminar">
-                                        <i class="fas fa-trash"></i> Eliminar
-                                    </button>
+                                ${item.cantidad}
+                                <form action="/carrito/${item.producto.id}/incrementar" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-cantidad">+</button>
                                 </form>
-                            </td>
-                        </tr>
-                    </#list>
+                            </div>
+                        </td>
+                        <td>$${(item.producto.precio * item.cantidad)?string(",##0.00")}</td>
+                        <td>
+                            <form action="/carrito/${item.producto.id}/eliminar" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-eliminar">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </#list>
                 </tbody>
             </table>
-            
-            <div class="total">
-                Total: $${total?string(",##0.00")}
-            </div>
+        </div>
 
-            <div class="acciones">
-                <a href="/index" class="btn btn-seguir-comprando">
-                    <i class="fas fa-arrow-left"></i> Seguir comprando
-                </a>
-                <form action="/carrito/finalizar" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-finalizar" id="btnFinalizarCompra">
-                        <i class="fas fa-check"></i> Finalizar Compra
-                    </button>
-                </form>
-                
-                <script>
-                    document.getElementById('btnFinalizarCompra').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const form = this.closest('form');
-                        
-                        fetch(form.action, {
-                            method: 'POST',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                // Redireccionar a la página de pedidos
-                                window.location.href = '/ordenes';
-                            } else {
-                                throw new Error('Error al finalizar la compra');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Error al finalizar la compra. Por favor, inténtelo de nuevo.');
-                        });
-                    });
-                                    
-                                    // Manejar botón de finalizar compra
-                                    const btnFinalizarCompra = document.getElementById('btnFinalizarCompra');
-                                    if (btnFinalizarCompra) {
-                        btnFinalizarCompra.addEventListener('click', function() {
-                            // Mostrar animación de carga
-                            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-                            this.disabled = true;
-                            
-                            fetch('/carrito/finalizar', {
-                                method: 'POST',
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    // Actualizar contador del carrito
-                                    const contador = document.querySelector('.cart-counter');
-                                    if (contador) {
-                                        contador.style.display = 'none';
-                                    }
-                                    
-                                    // Redirigir a la página de órdenes
-                                    window.location.href = '/ordenes';
-                                } else {
-                                    throw new Error('Error al procesar la compra');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                this.innerHTML = '<i class="fas fa-check"></i> Finalizar Compra';
-                                this.disabled = false;
-                                
-                                // Mostrar mensaje de error
-                                const mensajeError = document.createElement('div');
-                                mensajeError.style.backgroundColor = '#fee2e2';
-                                mensajeError.style.color = '#dc2626';
-                                mensajeError.style.padding = '1rem';
-                                mensajeError.style.borderRadius = '8px';
-                                mensajeError.style.marginTop = '1rem';
-                                mensajeError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error al procesar la compra. Por favor, inténtelo de nuevo.';
-                                
-                                // Insertar después del botón
-                                this.parentNode.insertAdjacentElement('afterend', mensajeError);
-                                
-                                // Auto-eliminar después de 5 segundos
-                                setTimeout(() => {
-                                    mensajeError.remove();
-                                }, 5000);
-                            });
-                        });
-                                    }
-                                });
-                            </script>
-                        </@layout.layout>
-                </script>
-            </div>
-                    <#else>
-            <div style="text-align: center; padding: 3rem;">
-                <p style="margin-bottom: 1rem;">No hay productos en el carrito</p>
-                <a href="/index" class="btn btn-seguir-comprando">
-                    <i class="fas fa-arrow-left"></i> Ir al catálogo
-                </a>
-            </div>
-        </#if>
-    </div>
-        </@layout.layout>
+        <div class="text-end mb-4">
+            <h4>Total: $${total?string(",##0.00")}</h4>
+        </div>
+
+        <div class="formulario-compra">
+            <h4>Datos de Envío y Pago</h4>
+            <form action="/carrito/finalizar" method="post">
+                <input type="text" name="calle" placeholder="Calle y número" required>
+                <input type="text" name="ciudad" placeholder="Ciudad" required>
+                <input type="text" name="codigoPostal" placeholder="Código Postal" required>
+                <input type="text" name="pais" placeholder="País" required>
+                <input type="text" name="tarjetaNumero" placeholder="Número de tarjeta" required>
+                <input type="text" name="tarjetaNombre" placeholder="Nombre en la tarjeta" required>
+                <input type="text" name="tarjetaExpiracion" placeholder="MM/AA" required>
+                <input type="text" name="tarjetaCVC" placeholder="CVC" required>
+
+                <button type="submit" class="btn-finalizar mt-3">
+                    <i class="fas fa-check"></i> Finalizar Compra
+                </button>
+            </form>
+        </div>
+
+    <#else>
+        <div class="text-center">
+            <h3>No tienes productos en el carrito</h3>
+            <a href="/catalogo_simple" class="btn btn-primary mt-3">
+                <i class="fas fa-arrow-left"></i> Ir al catálogo
+            </a>
+        </div>
+    </#if>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function actualizarContadorCarrito() {
+        fetch('/api/carrito/contador')
+            .then(response => response.json())
+            .then(data => {
+                const contador = document.getElementById('cart-counter');
+                if (contador) {
+                    if (data.cantidad > 0) {
+                        contador.textContent = data.cantidad;
+                        contador.style.display = 'flex';
+                    } else {
+                        contador.style.display = 'none';
+                    }
+                }
+            });
+    }
+    document.addEventListener('DOMContentLoaded', actualizarContadorCarrito);
+</script>
+
+</body>
+</html>

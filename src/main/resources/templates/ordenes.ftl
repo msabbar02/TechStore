@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Detalle de Producto - TechStore</title>
+    <title>Mis Pedidos - TechStore</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap, FontAwesome y SweetAlert2 -->
+    <!-- Bootstrap, FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -41,7 +41,6 @@
         .nav-link {
             font-weight: 600;
             color: var(--text);
-            margin-left: 1.5rem;
         }
 
         .nav-link:hover {
@@ -50,12 +49,13 @@
 
         .cart-icon-container {
             position: relative;
+            margin-right: 1.5rem;
         }
 
         #cart-counter {
             position: absolute;
             top: -5px;
-            right: -10px;
+            right: -8px;
             background-color: red;
             color: white;
             font-size: 0.75rem;
@@ -73,89 +73,49 @@
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid var(--primary);
-            margin-left: 1.5rem;
         }
 
-        /* Detalle Producto */
-        .detalle-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: auto;
+        h1 {
+            text-align: center;
+            margin: 2rem 0;
+            font-weight: 700;
+        }
+
+        .pedido-card {
             background: var(--white);
+            padding: 2rem;
             border-radius: 12px;
             box-shadow: var(--shadow);
-            margin-top: 2rem;
-        }
-
-        .imagen-producto {
-            overflow: hidden;
-            border-radius: 12px;
-            position: relative;
-        }
-
-        .imagen-producto img {
-            width: 100%;
-            height: 500px;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-            border-radius: 12px;
-        }
-
-        .imagen-producto:hover img {
-            transform: scale(1.15);
-        }
-
-        .info-producto {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .info-producto h1 {
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .precio {
-            font-size: 2rem;
-            color: var(--primary);
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .descripcion {
             margin-bottom: 2rem;
-            color: #64748b;
         }
 
-        .btn-add {
-            background: var(--success);
-            color: var(--white);
+        .pedido-info {
+            margin-bottom: 1rem;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 5px;
+            background: #e5e7eb;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            transition: width 0.5s ease;
+        }
+
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            transition: background 0.3s ease;
         }
 
-        .btn-add:hover {
-            background: #047857;
-        }
-
-        @media (max-width: 768px) {
-            .detalle-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .imagen-producto img {
-                height: auto;
-            }
-        }
+        .badge-preparando { background-color: #facc15; color: #78350f; }
+        .badge-camino { background-color: #38bdf8; color: #0c4a6e; }
+        .badge-entregado { background-color: #4ade80; color: #065f46; }
     </style>
 </head>
 
@@ -196,24 +156,52 @@
     </div>
 </nav>
 
-<!-- Detalle Producto -->
-<div class="detalle-container">
-    <div class="imagen-producto">
-        <img src="${producto.imagenUrl!'/img/default-product.jpg'}" alt="${producto.nombre}">
-    </div>
+<!-- Pedidos -->
+<h1>Mis Pedidos</h1>
 
-    <div class="info-producto">
-        <h1>${producto.nombre}</h1>
-        <p class="precio">$${producto.precio?string(",##0.00")}</p>
-        <p class="descripcion">${producto.descripcion}</p>
+<div class="container">
+    <#if pedidos?? && pedidos?size gt 0>
+        <#list pedidos as pedido>
+            <div class="pedido-card">
+                <div class="pedido-info">
+                    <h5><i class="fas fa-receipt"></i> Pedido #${pedido.id}</h5>
+                    <p><strong>Productos:</strong> ${pedido.totalProductos} </p>
+                    <p><strong>Total Pagado:</strong> $${pedido.totalPagado?string(",##0.00")}</p>
+                    <p><strong>Enviado a:</strong> ${pedido.usuario.nombre} - ${pedido.usuario.direccion}</p>
+                    <p>
+                        <strong>Estado:</strong>
+                        <#if pedido.estado == "Preparando">
+                            <span class="badge badge-preparando">Preparando</span>
+                        <#elseif pedido.estado == "En camino">
+                            <span class="badge badge-camino">En Camino</span>
+                        <#elseif pedido.estado == "Entregado">
+                            <span class="badge badge-entregado">Entregado</span>
+                        <#else>
+                            <span class="badge bg-secondary">${pedido.estado}</span>
+                        </#if>
+                    </p>
+                </div>
 
-        <form action="/carrito/agregar" method="post">
-            <input type="hidden" name="productoId" value="${producto.id}">
-            <button type="submit" class="btn btn-add">
-                <i class="fas fa-cart-plus"></i> Añadir al Carrito
-            </button>
-        </form>
-    </div>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar"
+                         style="width:
+                                 <#if pedido.estado == "Preparando">33%
+                                 <#elseif pedido.estado == "En camino">66%
+                                 <#elseif pedido.estado == "Entregado">100%
+                                 <#else>0%
+                         </#if>;">
+                    </div>
+                </div>
+            </div>
+        </#list>
+    <#else>
+        <div class="text-center">
+            <h3>No tienes pedidos todavía.</h3>
+            <a href="/catalogo_simple" class="btn btn-primary mt-3">
+                <i class="fas fa-shopping-bag"></i> Ir al catálogo
+            </a>
+        </div>
+    </#if>
 </div>
 
 <!-- Scripts -->
@@ -235,7 +223,6 @@
                 }
             });
     }
-
     document.addEventListener('DOMContentLoaded', actualizarContadorCarrito);
 </script>
 

@@ -16,11 +16,10 @@ public class Orden {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
-    
+
     @Column(name = "fecha_compra")
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fecha;
-    
+
     @Column(name = "estado")
     private String estado;
     

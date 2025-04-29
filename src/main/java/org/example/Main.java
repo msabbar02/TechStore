@@ -80,7 +80,13 @@ public class Main {
         return Javalin.create(config -> {
             // Configurar renderizador de plantillas
             config.fileRenderer(new JavalinFreemarker(freemarkerConfig));
-            
+
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/img";
+                staticFiles.directory = "/templates/img";
+                staticFiles.location = Location.CLASSPATH;
+            });
+
             // Servir archivos estáticos desde classpath
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
@@ -225,6 +231,9 @@ public class Main {
         app.before("/carrito/*", AuthMiddleware::requiereLogin);
         app.before("/orden/*", AuthMiddleware::requiereLogin);
         app.before("/ordenes", AuthMiddleware::requiereLogin);
+        
+        // El catálogo simple debe ser accesible para todos los usuarios autenticados,
+        // incluyendo administradores
         app.before("/catalogo_simple", AuthMiddleware::requiereLogin);
         
         // Proteger rutas que requieren rol de administrador

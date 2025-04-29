@@ -1,263 +1,180 @@
-<#import "layout.ftl" as layout>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil - TechStore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<@layout.layout title="Mi Perfil - TechStore">
+    <!-- Bootstrap + FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <style>
-        .perfil-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        :root {
+            --primary: #2563eb;
+            --background: #f9fafb;
+            --text: #1e293b;
+            --border: #e2e8f0;
         }
-        
-        .perfil-header {
-            background-color: #2563eb;
-            color: white;
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .perfil-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .perfil-body {
-            padding: 2rem;
-        }
-        
-        .perfil-foto {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #e0e0e0;
-            margin-bottom: 1rem;
-        }
-        
-        .perfil-info {
-            display: flex;
-            gap: 2rem;
-        }
-        
-        .perfil-foto-section {
-            flex: 1;
+
+        body {
+            background: var(--background);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
             align-items: center;
-            padding-right: 2rem;
-            border-right: 1px solid #e0e0e0;
+            font-size: 1.5rem;
         }
-        
-        .perfil-form-section {
-            flex: 2;
+
+        .profile-container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            margin: 3rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
-        
-        .form-group {
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
             margin-bottom: 1.5rem;
         }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #1e293b;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        
-        .form-control[readonly] {
-            background-color: #f8fafc;
-            cursor: not-allowed;
-        }
-        
-        .text-muted {
-            color: #64748b;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-        
-        .alert {
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .alert-success {
-            background-color: #dcfce7;
-            color: #15803d;
-            border: 1px solid #86efac;
-        }
-        
-        .alert-danger {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
-        }
-        
-        .form-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 2rem;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            border: none;
-        }
-        
-        .btn-primary {
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background-color: #64748b;
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: #dc2626;
-            color: white;
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .perfil-info {
-                flex-direction: column;
-            }
-            
-            .perfil-foto-section {
-                padding-right: 0;
-                border-right: none;
-                border-bottom: 1px solid #e0e0e0;
-                padding-bottom: 2rem;
-                margin-bottom: 2rem;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #f8fafc;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            outline: none;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: 100;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width:60%;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #1e40af;
+        }
+
+        .btn-secondary-custom {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 1rem; /* <-- aquí el margen-top corregido */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .btn-secondary-custom:hover {
+            background-color: var(--primary);
+            color: #ffffff;
         }
     </style>
+</head>
 
-    <div class="perfil-container">
-        <div class="perfil-header">
-            <h2><i class="fas fa-user-circle"></i> Mi Perfil</h2>
-            <a href="${(usuario.rol == 'admin')?then('/dashboard','/index')}" class="btn btn-secondary" style="padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.2);">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
-        
-        <div class="perfil-body">
-            <#if mensaje??>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> ${mensaje}
-                </div>
-            </#if>
-            <#if error??>
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> ${error}
-                </div>
-            </#if>
-            
-            <div class="perfil-info">
-                <div class="perfil-foto-section">
-                    <img src="${usuario.fotoPerfil!'/img/default-avatar.png'}" alt="Foto de perfil" class="perfil-foto"
-                         onerror="this.src='/img/default-avatar.png'">
-                    <h3>${usuario.nombre!''} ${usuario.apellido!''}</h3>
-                    <p class="text-muted">${(usuario.rol!'usuario')?capitalize}</p>
-                </div>
-                
-                <div class="perfil-form-section">
-                    <form action="/perfil" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="redirectTo" value="${(usuario.rol == 'admin')?then('/dashboard','/index')}">
-                        
-                        <div class="form-group">
-                            <label for="nombre" class="form-label">Nombre:</label>
-                            <input type="text" id="nombre" name="nombre" value="${usuario.nombre!''}" 
-                                  class="form-control" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="apellido" class="form-label">Apellido:</label>
-                            <input type="text" id="apellido" name="apellido" value="${usuario.apellido!''}" 
-                                  class="form-control" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="direccion" class="form-label">Dirección:</label>
-                            <input type="text" id="direccion" name="direccion" value="${usuario.direccion!''}" 
-                                  class="form-control">
-                            <small class="text-muted">Esta dirección se utilizará para tus envíos</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="username" class="form-label">Nombre de usuario:</label>
-                            <input type="text" id="username" name="username" value="${usuario.username!''}" 
-                                  class="form-control" readonly>
-                            <small class="text-muted">El nombre de usuario no se puede cambiar</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="fotoPerfil" class="form-label">Foto de perfil:</label>
-                            <input type="file" id="fotoPerfil" name="fotoPerfil" class="form-control" 
-                                  accept="image/jpeg,image/png,image/gif">
-                            <small class="text-muted">Formatos permitidos: JPG, PNG, GIF (máx. 2MB)</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="newPassword" class="form-label">Nueva contraseña:</label>
-                            <input type="password" id="newPassword" name="newPassword" class="form-control">
-                            <small class="text-muted">Dejar en blanco para mantener la contraseña actual</small>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar cambios
-                            </button>
-                            <a href="${(usuario.rol == 'admin')?then('/dashboard','/index')}" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Cancelar
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-laptop"></i> TechStore</a>
     </div>
-</@layout.layout>
+</nav>
+
+<!-- Contenido de perfil -->
+<div class="profile-container text-center">
+    <form action="/perfil/actualizar" method="post" enctype="multipart/form-data">
+
+        <img src="${usuario.fotoPerfil!'/img/default-profile.jpg'}" alt="Foto de perfil" class="profile-img">
+
+        <div class="form-group">
+            <label for="fotoPerfil">Actualizar Foto de Perfil</label>
+            <input type="file" name="fotoPerfil" id="fotoPerfil" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" value="${usuario.nombre}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="apellido">Apellido</label>
+            <input type="text" id="apellido" name="apellido" value="${usuario.apellido}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Usuario</label>
+            <input type="text" id="username" name="username" value="${usuario.username}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="direccion">Dirección de Envío</label>
+            <input type="text" id="direccion" name="direccion" value="${usuario.direccion!''}">
+        </div>
+
+        <button type="submit" class="btn-primary-custom">
+            <i class="fas fa-save"></i> Guardar Cambios
+        </button>
+
+        <a href="javascript:history.back()" class="btn-secondary-custom">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+
+    </form>
+</div>
+
+<!-- Bootstrap Script -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

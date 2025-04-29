@@ -3,15 +3,22 @@ package org.example.controller;
 import io.javalin.http.Context;
 import org.example.dao.OrdenDAO;
 import org.example.model.Orden;
+import org.example.model.Producto;
 import org.example.model.Usuario;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OrdenController {
-
+    private static final Logger logger = LoggerFactory.getLogger(OrdenController.class);
+    private static final Map<Integer, Producto> CACHE_PRODUCTOS = new ConcurrentHashMap<>(50);
+    private static final Map<Integer, Long> CACHE_TIMESTAMPS = new ConcurrentHashMap<>(50);
+    private static final long CACHE_TIMEOUT_MS = 300000; // 5 minutos
     public static void listarOrdenes(Context ctx) {
         try {
             Usuario usuario = ctx.sessionAttribute("usuario");
@@ -26,9 +33,10 @@ public class OrdenController {
             modelo.put("ordenes", ordenes);
             modelo.put("usuario", usuario);
             
-            ctx.render("ordenes/lista.ftl", modelo);
+            ctx.render("ordenes.ftl", modelo);
+            logger.info("Mostrando órdenes para el usuario: {}", usuario.getUsername());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error al cargar las órdenes: ", e);
             ctx.status(500);
             ctx.result("Error al cargar las órdenes");
         }
