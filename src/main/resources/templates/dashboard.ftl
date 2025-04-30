@@ -171,6 +171,10 @@
             padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
         }
+        .card-img-top{
+            height: 200px;
+            object-fit: cover;
+        }
 
 
     </style>
@@ -233,7 +237,7 @@
             <#list productos as producto>
                 <div class="col-md-6 col-lg-4">
                     <div class="card shadow-sm h-100">
-                        <img src="${producto.imagenUrl!'/img/default-product.jpg'}" class="card-img-top" alt="${producto.nombre}">
+                        <img src="${producto.imagenUrl!'/img/images.png'}" class="card-img-top" alt="${producto.nombre}">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">${producto.nombre}</h5>
                             <p class="card-text text-muted">${producto.descripcion}</p>

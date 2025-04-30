@@ -222,14 +222,10 @@
         <div style="position: relative; width: 100%; overflow: hidden; margin-top: 40px;">
             <div class="carrusel-track" style="display: flex; width: calc(300px * 10); animation: scroll 30s linear infinite;">
                 <!-- Imágenes específicas -->
-                <img src="/img/tele2.jpeg" alt="Smartphone">
-                <img src="/img/tele1.webp" alt="Smartphone">
-                <img src="/img/foto2.webp" alt="ordenadror">
-                <img src="/img/foto3.webp" alt="ordenadror">
-                <img src="/img/ordenador.webp" alt="ordenadror">
-                <img src="/img/teclado.webp" alt="Teclado">
-
-
+                <img src="/img/img1.jpg" alt="Smartphone">
+                <img src="/img/img2.jpg" alt="Smartphone">
+                <img src="/img/img3.jpg" alt="ordenadror">
+                <img src="/img/img4.jpg" alt="ordenadror">
             </div>
         </div>
 
