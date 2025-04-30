@@ -51,11 +51,11 @@ Aplicación web para la gestión de una tienda de productos tecnológicos, desar
 
 - Administrador:
   - Usuario: admin
-  - Contraseña: admin123
+  - Contraseña: admin
 
 - Usuario normal:
-  - Usuario: lector
-  - Contraseña: lector123
+  - Usuario: moha
+  - Contraseña: moha123
 
 ## Estructura del proyecto
 
