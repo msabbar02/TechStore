@@ -148,6 +148,33 @@
         .btn-detalle:hover {
             background: #1e40af;
         }
+        .filtros-catalogo {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .filtros-catalogo form {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .btn-categoria {
+            min-width: 110px;
+            text-align: center;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-categoria:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
     </style>
 </head>
 
@@ -188,8 +215,26 @@
     </div>
 </nav>
 
-<!-- Catálogo -->
-<h1>Catálogo de Productos</h1>
+<div class="container filtros-catalogo">
+    <form class="d-flex justify-content-start align-items-center" method="get" action="/catalogo_simple">
+        <input type="text" name="buscar" class="form-control me-2" placeholder="Buscar producto..." value="${buscar!}">
+        <button type="submit" class="btn btn-outline-primary me-2">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+        <a href="/catalogo_simple" class="btn btn-outline-secondary">Mostrar todo</a>
+    </form>
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+        <a href="/catalogo_simple" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'ALL'>btn-primary text-white<#else>btn-outline-secondary</#if>">Todos</a>
+        <a href="/catalogo_simple?categoria=Pantalla" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Pantalla'>btn-primary text-white<#else>btn-outline-secondary</#if>">Pantallas</a>
+        <a href="/catalogo_simple?categoria=Teclado" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Teclado'>btn-primary text-white<#else>btn-outline-secondary</#if>">Teclados</a>
+        <a href="/catalogo_simple?categoria=Ratón" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Ratón'>btn-primary text-white<#else>btn-outline-secondary</#if>">Ratones</a>
+        <a href="/catalogo_simple?categoria=Tablet" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Tablet'>btn-primary text-white<#else>btn-outline-secondary</#if>">Tablets</a>
+        <a href="/catalogo_simple?categoria=Portátil" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Portátil'>btn-primary text-white<#else>btn-outline-secondary</#if>">Portátiles</a>
+        <a href="/catalogo_simple?categoria=Smartphone" class="btn btn-sm btn-categoria <#if categoria?? && categoria == 'Smartphone'>btn-primary text-white<#else>btn-outline-secondary</#if>">Smartphones</a>
+    </div>
+</div>
+
 
 <div class="productos-grid">
     <#list productos as producto>

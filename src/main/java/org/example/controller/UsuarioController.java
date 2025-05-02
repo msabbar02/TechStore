@@ -2,6 +2,8 @@ package org.example.controller;
 
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
+import org.example.dao.OrdenDAO;
+import org.example.dao.ProductoDAO;
 import org.example.dao.UsuarioDAO;
 import org.example.model.Usuario;
 import org.example.util.FileUtil;
@@ -13,6 +15,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,7 +163,7 @@ public class UsuarioController {
     public static void cambiarRol(Context ctx) {
         Usuario adminUsuario = ctx.sessionAttribute("usuario");
         if (adminUsuario == null || !"admin".equalsIgnoreCase(adminUsuario.getRol())) {
-            ctx.status(403).json(Map.of("error", "No autorizado"));
+            ctx.redirect("/login");
             return;
         }
 
@@ -167,29 +171,54 @@ public class UsuarioController {
             int userId = Integer.parseInt(ctx.pathParam("id"));
             String nuevoRol = ctx.formParam("rol");
 
-            if (nuevoRol == null || (!nuevoRol.equalsIgnoreCase("user") && !nuevoRol.equalsIgnoreCase("admin"))) {
-                ctx.status(400).json(Map.of("error", "Rol no válido"));
+            if (!"admin".equalsIgnoreCase(nuevoRol) && !"lector".equalsIgnoreCase(nuevoRol)) {
+                ctx.redirect("/dashboard");
                 return;
             }
 
             Usuario usuario = UsuarioDAO.obtenerPorId(userId);
-            if (usuario == null) {
-                ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
-                return;
+            if (usuario != null) {
+                usuario.setRol(nuevoRol);
+                UsuarioDAO.actualizar(usuario);
             }
 
-            usuario.setRol(nuevoRol);
-            UsuarioDAO.actualizar(usuario);
-            
-            ctx.json(Map.of("success", true, "message", "Rol actualizado correctamente"));
-        } catch (NumberFormatException e) {
-            ctx.status(400).json(Map.of("error", "ID de usuario no válido"));
+            ctx.redirect("/dashboard");
         } catch (Exception e) {
-            ctx.status(500).json(Map.of("error", "Error al cambiar el rol"));
+            e.printStackTrace();
+            ctx.redirect("/dashboard");
         }
     }
 
+
     public static void listarUsuarios(Context ctx) {
+        Usuario adminUsuario = ctx.sessionAttribute("usuario");
+
+        if (adminUsuario == null || !"admin".equalsIgnoreCase(adminUsuario.getRol())) {
+            ctx.redirect("/login");
+            return;
+        }
+
+        try {
+            var productos = ProductoDAO.obtenerTodos();
+            var ordenes = OrdenDAO.obtenerTodasOrdenes();
+            var usuarios = UsuarioDAO.obtenerTodos();
+
+            Map<String, Object> modelo = new HashMap<>();
+            modelo.put("usuario", adminUsuario);
+            modelo.put("productos", productos);
+            modelo.put("ordenes", ordenes);
+            modelo.put("usuarios", usuarios);  // <- Agregado aquí
+
+            ctx.render("dashboard.ftl", modelo);
+
+        } catch (Exception e) {
+            ctx.status(500).result("Error al cargar dashboard: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void eliminarUsuario(Context ctx) {
         Usuario adminUsuario = ctx.sessionAttribute("usuario");
         if (adminUsuario == null || !"admin".equalsIgnoreCase(adminUsuario.getRol())) {
             ctx.redirect("/login");
@@ -197,12 +226,129 @@ public class UsuarioController {
         }
 
         try {
-            var usuarios = UsuarioDAO.obtenerTodos();
-            ctx.attribute("usuarios", usuarios);
-            ctx.render("usuarios.ftl");
+            int userId = Integer.parseInt(ctx.pathParam("id"));
+
+            if (adminUsuario.getId() == userId) {
+                ctx.sessionAttribute("error", "No puedes eliminar tu propio usuario.");
+                ctx.redirect("/dashboard");
+                return;
+            }
+
+            UsuarioDAO.eliminar(userId);
+            ctx.sessionAttribute("mensaje", "Usuario eliminado correctamente.");
         } catch (Exception e) {
-            ctx.attribute("error", "Error al obtener la lista de usuarios");
+            ctx.sessionAttribute("error", "Error al eliminar usuario: " + e.getMessage());
+        }
+
+        ctx.redirect("/dashboard");
+    }
+
+    public static void formularioEditarUsuario(@NotNull Context ctx) {
+        // Verificar que sea un administrador
+        Usuario adminUsuario = ctx.sessionAttribute("usuario");
+        if (adminUsuario == null || !"admin".equalsIgnoreCase(adminUsuario.getRol())) {
+            ctx.redirect("/login");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(ctx.pathParam("id"));
+            Usuario usuarioEditar = UsuarioDAO.obtenerPorId(id);
+
+            if (usuarioEditar == null) {
+                ctx.status(404);
+                ctx.sessionAttribute("error", "Usuario no encontrado");
+                ctx.redirect("/dashboard");
+                return;
+            }
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("usuario", adminUsuario); // Usuario administrador actual
+            model.put("usuarioEditar", usuarioEditar); // Usuario que se está editando
+            model.put("esAdmin", true); // Indicador de que es edición por admin
+
+            ctx.render("perfil.ftl", model);
+        } catch (NumberFormatException e) {
+            ctx.status(400);
+            ctx.sessionAttribute("error", "ID de usuario inválido");
+            ctx.redirect("/dashboard");
+        } catch (Exception e) {
+            ctx.status(500);
+            ctx.sessionAttribute("error", "Error al cargar el perfil: " + e.getMessage());
             ctx.redirect("/dashboard");
         }
     }
+
+    public static void actualizarUsuarioPorAdmin(Context ctx) {
+        Usuario adminUsuario = ctx.sessionAttribute("usuario");
+        if (adminUsuario == null || !"admin".equalsIgnoreCase(adminUsuario.getRol())) {
+            ctx.redirect("/login");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(ctx.pathParam("id"));
+            Usuario usuario = UsuarioDAO.obtenerPorId(id);
+
+            if (usuario == null) {
+                ctx.sessionAttribute("error", "Usuario no encontrado");
+                ctx.redirect("/dashboard");
+                return;
+            }
+
+            // Actualizar campos básicos
+            usuario.setNombre(ctx.formParam("nombre"));
+            usuario.setApellido(ctx.formParam("apellido"));
+            usuario.setDireccion(ctx.formParam("direccion"));
+            usuario.setUsername(ctx.formParam("username"));
+
+            // El administrador puede cambiar el rol
+            String nuevoRol = ctx.formParam("rol");
+            if (nuevoRol != null && !nuevoRol.isEmpty()) {
+                usuario.setRol(nuevoRol);
+            }
+
+            // Manejar nueva contraseña si se proporciona
+            String newPassword = ctx.formParam("newPassword");
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                usuario.setPassword(PasswordUtil.hashPassword(newPassword));
+            }
+
+            // Procesar la foto de perfil
+            UploadedFile foto = ctx.uploadedFile("fotoPerfil");
+            if (foto != null && foto.size() > 0) {
+                String nombreArchivo = System.currentTimeMillis() + "_" +
+                        usuario.getUsername() + "_" +
+                        foto.filename();
+                String rutaGuardado = "uploads/usuarios/" + nombreArchivo;
+
+                // Asegurar que el directorio existe
+                new File("uploads/usuarios").mkdirs();
+
+                // Guardar el archivo
+                try (InputStream input = foto.content();
+                     FileOutputStream output = new FileOutputStream(rutaGuardado)) {
+                    input.transferTo(output);
+                }
+
+                // Actualizar la URL de la foto en el usuario
+                usuario.setFotoPerfil("/uploads/usuarios/" + nombreArchivo);
+            }
+
+            // Guardar cambios
+            UsuarioDAO.actualizar(usuario);
+
+            // Agregar mensaje de éxito
+            ctx.sessionAttribute("mensaje", "Usuario actualizado correctamente");
+            ctx.redirect("/dashboard");
+
+        } catch (Exception e) {
+            logger.error("Error al actualizar usuario: {}", e.getMessage());
+            ctx.sessionAttribute("error", "Error al actualizar el usuario: " + e.getMessage());
+            ctx.redirect("/dashboard");
+        }
+    }
+
+
+
 }

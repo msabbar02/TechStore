@@ -280,7 +280,6 @@
 
 
 <!-- Footer -->
-<!-- Footer actualizado -->
 <footer class="footer">
     <div class="container">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 40px;">

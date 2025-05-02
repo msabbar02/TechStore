@@ -34,7 +34,7 @@ public class OrdenController {
             modelo.put("usuario", usuario);
 
             // Cambiar a una plantilla específica de órdenes
-            ctx.render("/lista.ftl", modelo);
+            ctx.render("/ordenes.ftl", modelo);
 
         } catch (Exception e) {
             logger.error("Error al cargar las órdenes: {}", e.getMessage());
@@ -120,7 +120,7 @@ public class OrdenController {
             List<Orden> ordenes = OrdenDAO.obtenerTodasOrdenes();
             Map<String, Object> modelo = new HashMap<>();
             modelo.put("ordenes", ordenes);
-            context.render("ordenes/lista.ftl", modelo);
+            context.render("/ordenes.ftl", modelo);
         } catch (Exception e) {
             e.printStackTrace();
             context.status(500);

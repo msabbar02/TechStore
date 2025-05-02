@@ -163,38 +163,4 @@ public class AuthController {
         ctx.redirect("/login");
     }
 
-    // Ver perfil
-    public static void verPerfil(Context ctx) {
-        Usuario usuario = ctx.sessionAttribute("usuario");
-        ctx.attribute("usuario", usuario);
-        ctx.render("usuario/perfil.ftl");
-    }
-
-    // Modificar perfil
-    public static void modificarPerfil(Context ctx) {
-        Usuario usuario = ctx.sessionAttribute("usuario");
-
-        usuario.setNombre(ctx.formParam("nombre"));
-        usuario.setApellido(ctx.formParam("apellido"));
-        usuario.setDireccion(ctx.formParam("direccion"));
-
-        // Subida de nueva foto de perfil (opcional)
-        UploadedFile uploaded = ctx.uploadedFile("fotoPerfil");
-        if (uploaded != null) {
-            String nombreArchivo = System.currentTimeMillis() + "-" + uploaded.filename();
-            Path destino = Paths.get("uploads", nombreArchivo);
-            try (InputStream input = uploaded.content()) {
-                Files.copy(input, destino, StandardCopyOption.REPLACE_EXISTING);
-                usuario.setFotoPerfil("/uploads/" + nombreArchivo);
-            } catch (IOException e) {
-                e.printStackTrace();
-                ctx.status(500).result("Error al subir nueva foto de perfil");
-                return;
-            }
-        }
-
-        UsuarioDAO.actualizar(usuario);
-        ctx.redirect("usuario/perfil");
-    }
-
 }

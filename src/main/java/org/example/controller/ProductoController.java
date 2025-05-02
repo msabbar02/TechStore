@@ -3,6 +3,7 @@ package org.example.controller;
 import io.javalin.http.Context;
 import org.example.dao.OrdenDAO;
 import org.example.dao.ProductoDAO;
+import org.example.dao.UsuarioDAO;
 import org.example.model.Orden;
 import org.example.model.Producto;
 import org.example.model.Usuario;
@@ -72,11 +73,14 @@ public class ProductoController {
             } catch (Exception e) {
                 logger.warn("Error al cargar órdenes: {}", e.getMessage());
             }
+            List<Usuario> usuarios = UsuarioDAO.obtenerTodos();
+            logger.info("Usuarios encontrados: {}", usuarios.size());
     
             // Crear el modelo de datos para la plantilla
             Map<String, Object> modelo = new HashMap<>();
             modelo.put("productos", productos);
             modelo.put("ordenes", ordenes);
+            modelo.put("usuarios", usuarios);
             modelo.put("usuario", usuario);
             
             // Verificar si hay mensaje de operación exitosa en la sesión
@@ -482,11 +486,21 @@ public class ProductoController {
         // Obtener todos los productos
         List<Producto> productos = ProductoDAO.obtenerTodos();
         System.out.println("Productos obtenidos para catálogo: " + productos.size());
-        
+        String termino = ctx.queryParam("buscar");
+        String categoria = ctx.queryParam("categoria");
+        if (termino != null && !termino.isEmpty()) {
+            productos = ProductoDAO.buscar(termino.trim().toLowerCase());
+           ctx.attribute("buscar", termino);
+        }else if (categoria != null && !categoria.isEmpty()) {
+            productos = ProductoDAO.filtrarPorCategoria(categoria);
+        }else {
+            productos = ProductoDAO.obtenerTodos();
+        }
         // Preparar el modelo
         Map<String, Object> modelo = new HashMap<>();
         modelo.put("productos", productos);
         modelo.put("usuario", usuario);
+
     
         // Procesar mensajes de sesión si existen
         String mensaje = ctx.sessionAttribute("mensaje");
