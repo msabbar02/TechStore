@@ -6,6 +6,7 @@ import org.example.util.PasswordUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UsuarioDAO {
@@ -129,7 +130,7 @@ public class UsuarioDAO {
             try {
                 Usuario usuario = session.get(Usuario.class, id);
                 if (usuario != null) {
-                    session.remove(usuario);
+                    session.remove(usuario); // <-- aquí elimina en la BD
                 }
                 tx.commit();
             } catch (Exception e) {
@@ -142,13 +143,16 @@ public class UsuarioDAO {
     }
 
 
+
     public static List<Usuario> obtenerTodos() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.createQuery("FROM Usuario", Usuario.class).list();
         } catch (Exception e) {
-            throw new RuntimeException("Error al obtener la lista de usuarios", e);
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
+
 
 
 }

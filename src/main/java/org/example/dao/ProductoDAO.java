@@ -228,10 +228,11 @@ public class ProductoDAO {
             query.setParameter("categoria", categoria.toUpperCase());
             return query.list();
         } catch (Exception e) {
-            logger.error("Error al filtrar productos por categoría '{}': {}", categoria, e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }
+
 
 
 }

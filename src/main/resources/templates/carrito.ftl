@@ -210,12 +210,13 @@
 
 <div class="container">
     <#if items?? && items?size gt 0>
+        <!-- Tabla de productos -->
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead>
                 <tr>
+                    <th>Imagen</th>
                     <th>Producto</th>
-                    <th>Nombre</th>
                     <th>Precio</th>
                     <th>Cantidad</th>
                     <th>Subtotal</th>
@@ -225,25 +226,23 @@
                 <tbody>
                 <#list items as item>
                     <tr>
-                        <td>
-                            <img src="${item.producto.imagenUrl!'/img/default-product.jpg'}" alt="${item.producto.nombre}" class="producto-img">
-                        </td>
+                        <td><img src="${item.producto.imagenUrl!'/img/default-product.jpg'}" alt="${item.producto.nombre}" class="producto-img"></td>
                         <td>${item.producto.nombre}</td>
                         <td>$${item.producto.precio?string(",##0.00")}</td>
                         <td>
                             <div class="d-flex justify-content-center align-items-center gap-2">
-                                <form action="/carrito/${item.producto.id}/decrementar" method="post" style="display:inline;">
+                                <form action="/carrito/${item.producto.id}/decrementar" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-cantidad">-</button>
                                 </form>
-                                ${item.cantidad}
-                                <form action="/carrito/${item.producto.id}/incrementar" method="post" style="display:inline;">
+                                <span>${item.cantidad}</span>
+                                <form action="/carrito/${item.producto.id}/incrementar" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-cantidad">+</button>
                                 </form>
                             </div>
                         </td>
                         <td>$${(item.producto.precio * item.cantidad)?string(",##0.00")}</td>
                         <td>
-                            <form action="/carrito/${item.producto.id}/eliminar" method="post" style="display:inline;">
+                            <form action="/carrito/${item.producto.id}/eliminar" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-eliminar">
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
@@ -255,6 +254,7 @@
             </table>
         </div>
 
+        <!-- Total y formulario de compra -->
         <div class="text-end mb-4">
             <h4>Total: $${total?string(",##0.00")}</h4>
         </div>
@@ -262,22 +262,27 @@
         <div class="formulario-compra">
             <h4>Datos de Envío y Pago</h4>
             <form action="/carrito/finalizar" method="post">
-                <input type="text" name="calle" placeholder="Calle y número" required>
-                <input type="text" name="ciudad" placeholder="Ciudad" required>
-                <input type="text" name="codigoPostal" placeholder="Código Postal" required>
-                <input type="text" name="pais" placeholder="País" required>
-                <input type="text" name="tarjetaNumero" placeholder="Número de tarjeta" required>
-                <input type="text" name="tarjetaNombre" placeholder="Nombre en la tarjeta" required>
-                <input type="text" name="tarjetaExpiracion" placeholder="MM/AA" required>
-                <input type="text" name="tarjetaCVC" placeholder="CVC" required>
-
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" name="calle" placeholder="Calle y número" required>
+                        <input type="text" name="ciudad" placeholder="Ciudad" required>
+                        <input type="text" name="codigoPostal" placeholder="Código Postal" required>
+                        <input type="text" name="pais" placeholder="País" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="tarjetaNumero" placeholder="Número de tarjeta" required>
+                        <input type="text" name="tarjetaNombre" placeholder="Nombre en la tarjeta" required>
+                        <input type="text" name="tarjetaExpiracion" placeholder="MM/AA" pattern="\\d{2}/\\d{2}" required>
+                        <input type="text" name="tarjetaCVC" placeholder="CVC" pattern="\\d{3,4}" required>
+                    </div>
+                </div>
                 <button type="submit" class="btn-finalizar mt-3">
                     <i class="fas fa-check"></i> Finalizar Compra
                 </button>
             </form>
         </div>
-
     <#else>
+        <!-- Si no hay productos -->
         <div class="text-center">
             <h3>No tienes productos en el carrito</h3>
             <a href="/catalogo_simple" class="btn btn-primary mt-3">
@@ -286,6 +291,7 @@
         </div>
     </#if>
 </div>
+
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

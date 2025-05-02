@@ -101,6 +101,17 @@ public class Orden {
     public void setFechaFormateada(String fechaFormateada) {
         this.fechaFormateada = fechaFormateada;
     }
+
+    public void agregarDetalle(Producto producto, int cantidad, double precioUnitario) {
+        DetalleOrden detalle = new DetalleOrden();
+        detalle.setProducto(producto);
+        detalle.setCantidad(cantidad);
+        detalle.setPrecioUnitario(precioUnitario);
+        detalle.setSubtotal(precioUnitario * cantidad);
+        detalle.setOrden(this); // asignar relación inversa
+        this.getDetalles().add(detalle);
+    }
+
 }
 
 

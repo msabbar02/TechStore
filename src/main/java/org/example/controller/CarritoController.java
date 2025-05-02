@@ -9,12 +9,12 @@ import org.example.model.Producto;
     import org.example.model.Usuario;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
     import java.util.HashMap;
     import java.util.List;
     import java.util.Map;
 
-import static org.example.controller.UsuarioController.CACHE_TIMEOUT_MS;
 import static org.example.dao.ProductoDAO.CACHE_TIMESTAMP;
 import static org.example.dao.ProductoDAO.PRODUCTOS_CACHE;
    public class CarritoController {
@@ -25,56 +25,74 @@ import static org.example.dao.ProductoDAO.PRODUCTOS_CACHE;
     /**
      * Método para agregar un producto al carrito (desde formulario)
      */
-    public static void agregarAlCarrito(Context ctx) {
-        try {
-            int productoId = Integer.parseInt(ctx.formParam("productoId"));
-            String cantidadParam = ctx.formParam("cantidad");
-            int cantidad = 1; // Valor predeterminado
+       public static void agregarAlCarrito(Context ctx) {
+           try {
+               String productoIdParam = ctx.formParam("productoId");
+               String referer = ctx.header("Referer"); // Obtener la página de referencia
 
-            if (cantidadParam != null && !cantidadParam.isEmpty()) {
-                try {
-                    cantidad = Integer.parseInt(cantidadParam);
-                } catch (NumberFormatException e) {
-                    // Si no es un número válido, usamos el valor predeterminado
-                }
-            }
+               // Si no hay referencia, usar una ruta por defecto
+               if (referer == null) {
+                   referer = "/catalogo_simple";
+               }
 
-            // Obtener carrito de la sesión o crear uno nuevo
-            List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
-            if (carrito == null) {
-                carrito = new ArrayList<>();
-            }
+               if (productoIdParam == null) {
+                   ctx.redirect(referer + "?error=NoProductId");
+                   return;
+               }
 
-            // Buscar si el producto ya existe en el carrito
-            boolean productoExistente = false;
-            for (ItemCarrito item : carrito) {
-                if (item.getProducto().getId() == productoId) {
-                    item.setCantidad(item.getCantidad() + cantidad);
-                    productoExistente = true;
-                    break;
-                }
-            }
+               int productoId = Integer.parseInt(productoIdParam);
 
-            // Si no existe, lo agrega al carrito
-            if (!productoExistente) {
-                Producto producto = ProductoDAO.obtenerPorId(productoId);
-                if (producto != null) {
-                    ItemCarrito nuevoItem = new ItemCarrito(producto, cantidad);
-                    carrito.add(nuevoItem);
-                } else {
-                    ctx.json(Map.of("success", false, "error", "Producto no encontrado"));
-                    return;
-                }
-            }
+               // Obtener cantidad del formulario o usar valor predeterminado
+               String cantidadParam = ctx.formParam("cantidad");
+               int cantidad = 1;
 
-            ctx.sessionAttribute("carrito", carrito);
-            ctx.json(Map.of("success", true));
-        } catch (Exception e) {
-            System.err.println("Error al agregar al carrito: " + e.getMessage());
-            e.printStackTrace();
-            ctx.json(Map.of("success", false, "error", e.getMessage()));
-        }
-    }
+               if (cantidadParam != null && !cantidadParam.isEmpty()) {
+                   try {
+                       cantidad = Integer.parseInt(cantidadParam);
+                   } catch (NumberFormatException e) {
+                       // Si no es un número válido, usar el valor predeterminado
+                   }
+               }
+
+               // Obtener carrito de la sesión o crear uno nuevo
+               List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
+               if (carrito == null) {
+                   carrito = new ArrayList<>();
+               }
+
+               // Buscar si el producto ya existe en el carrito
+               boolean productoExistente = false;
+               for (ItemCarrito item : carrito) {
+                   if (item.getProducto().getId() == productoId) {
+                       item.setCantidad(item.getCantidad() + cantidad);
+                       productoExistente = true;
+                       break;
+                   }
+               }
+
+               // Si no existe, lo agrega al carrito
+               if (!productoExistente) {
+                   Producto producto = ProductoDAO.obtenerPorId(productoId);
+                   if (producto != null) {
+                       ItemCarrito nuevoItem = new ItemCarrito(producto, cantidad);
+                       carrito.add(nuevoItem);
+                   } else {
+                       ctx.redirect(referer + "?error=ProductoNoEncontrado");
+                       return;
+                   }
+               }
+
+               // Guardar carrito en la sesión
+               ctx.sessionAttribute("carrito", carrito);
+
+               // Redirigir a la página anterior o a la página de catálogo con mensaje de éxito
+               ctx.redirect(referer + "?mensaje=ProductoAgregado");
+           } catch (Exception e) {
+               System.err.println("Error al agregar al carrito: " + e.getMessage());
+               e.printStackTrace();
+               ctx.redirect("/catalogo_simple?error=" + e.getMessage().replace(" ", "+"));
+           }
+       }
 
     /**
      * Obtiene un producto utilizando caché para mejorar rendimiento
@@ -190,36 +208,37 @@ import static org.example.dao.ProductoDAO.PRODUCTOS_CACHE;
     }
 
 
-    public static void mostrarCarrito(@NotNull Context context) {
-        try {
-            Usuario usuario = context.sessionAttribute("usuario");
-            if (usuario == null) {
-                context.redirect("/login");
-                return;
-            }
+       public static void mostrarCarrito(Context ctx) {
+           try {
+               Usuario usuario = ctx.sessionAttribute("usuario");
+               if (usuario == null) {
+                   ctx.redirect("/login");
+                   return;
+               }
 
-            // Obtener el carrito del usuario desde la base de datos
-            List<Orden> itemsCarrito = OrdenDAO.obtenerOrdenesDeUsuario(Long.valueOf(usuario.getId()));
+               List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
+               if (carrito == null) {
+                   carrito = new ArrayList<>();
+               }
 
-            // Calcular el total
-            double total = itemsCarrito.stream()
-                    .mapToDouble(Orden::calcularSubtotal)
-                    .sum();
+               double total = carrito.stream()
+                       .mapToDouble(item -> item.getProducto().getPrecio() * item.getCantidad())
+                       .sum();
 
-            // Preparar el modelo para la vista
-            Map<String, Object> modelo = new HashMap<>();
-            modelo.put("usuario", usuario);
-            modelo.put("items", itemsCarrito);
-            modelo.put("total", total);
+               Map<String, Object> modelo = new HashMap<>();
+               modelo.put("usuario", usuario);
+               modelo.put("carrito", carrito);
+               modelo.put("total", total);
 
-            context.render("carrito.ftl", modelo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            context.status(500).result("Error al cargar el carrito desde la base de datos");
-        }
-    }
+               ctx.render("carrito.ftl", modelo);
+           } catch (Exception e) {
+               e.printStackTrace();
+               ctx.status(500).result("Error al mostrar el carrito");
+           }
+       }
 
-    public static void vaciarCarrito(@NotNull Context context) {
+
+       public static void vaciarCarrito(@NotNull Context context) {
         try {
             Usuario usuario = context.sessionAttribute("usuario");
             if (usuario == null) {
@@ -242,4 +261,53 @@ import static org.example.dao.ProductoDAO.PRODUCTOS_CACHE;
             context.status(500).result("Error al vaciar el carrito");
         }
     }
-}
+
+
+    public static void finalizarCompra(Context ctx) {
+           try {
+               Usuario usuario = ctx.sessionAttribute("usuario");
+               if (usuario == null) {
+                   ctx.redirect("/login");
+                   return;
+               }
+
+               List<ItemCarrito> carrito = ctx.sessionAttribute("carrito");
+               if (carrito == null || carrito.isEmpty()) {
+                   ctx.redirect("/carrito");
+                   return;
+               }
+
+               // Calcular el total
+               double total = carrito.stream()
+                       .mapToDouble(item -> item.getProducto().getPrecio() * item.getCantidad())
+                       .sum();
+
+               // Crear la orden
+               Orden orden = new Orden();
+               orden.setUsuario(usuario);
+               orden.setTotal(total);
+               orden.setEstado("PENDIENTE");
+               orden.setFecha(LocalDateTime.now());
+
+               // Añadir detalles a la orden
+               for (ItemCarrito item : carrito) {
+                   orden.agregarDetalle(item.getProducto(), item.getCantidad(), item.getProducto().getPrecio());
+               }
+
+               // Guardar en la base de datos
+               OrdenDAO.guardar(orden);
+
+               // Limpiar el carrito
+               carrito.clear();
+               ctx.sessionAttribute("carrito", carrito);
+
+               // Redirigir al historial de pedidos
+               ctx.redirect("/ordenes");
+
+           } catch (Exception e) {
+               e.printStackTrace();
+               ctx.status(500).result("Error al procesar la compra: " + e.getMessage());
+           }
+       }
+
+   }

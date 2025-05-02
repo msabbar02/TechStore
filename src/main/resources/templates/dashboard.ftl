@@ -189,6 +189,7 @@
     <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
 
     <nav class="menu">
+        <a href="#" id="linkUsuarios"><i class="fas fa-users"></i><span>Usuarios</span></a>
         <a href="#" id="linkProductos" class="active"><i class="fas fa-box"></i><span>Productos</span></a>
         <a href="#" id="linkPedidos"><i class="fas fa-shopping-cart"></i><span>Pedidos</span></a>
         <a href="#" id="linkPerfil"><i class="fas fa-user"></i><span>Mi Perfil</span></a>
@@ -204,6 +205,74 @@
 <!-- Main -->
 <div class="main-content" id="mainContent">
 
+    <!-- Usuarios Section -->
+    <div id="usuariosSection" class="section">
+        <h1 class="mb-4">Gestión de Usuarios</h1>
+
+        <#if usuarios?? && usuarios?has_content>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-primary text-center">
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nombre</th>
+                        <th>Username</th>
+                        <th>Dirección</th>
+                        <th>Rol</th>
+                        <th>Cambiar Rol</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <#list usuarios as u>
+                        <tr class="text-center">
+                            <td>
+                                <img src="${u.fotoPerfil!'/img/dev1.jpeg'}" width="50" height="50" class="rounded-circle">
+                            </td>
+                            <td>${u.nombre} ${u.apellido}</td>
+                            <td>${u.username}</td>
+                            <td>${u.direccion!'-'}</td>
+                            <td>
+                            <span class="badge
+                                <#if u.rol?upper_case == 'ADMIN'>
+                                    bg-success
+                                <#else>
+                                    bg-secondary
+                                </#if>">${u.rol?upper_case}</span>
+                            </td>
+                            <td>
+                                <form action="/admin/usuario/${u.id}/rol" method="post" class="d-flex gap-2 align-items-center">
+                                    <select name="rol" class="form-select form-select-sm">
+                                        <option value="admin" <#if u.rol == "admin">selected</#if>>Admin</option>
+                                        <option value="lector" <#if u.rol == "lector">selected</#if>>Lector</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <!-- Botón Editar -->
+                                <a href="/admin/usuarios/${u.id}/editar" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <!-- Botón Eliminar -->
+                                <form action="/admin/usuarios/${u.id}/eliminar" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+
+                        </tr>
+                    </#list>
+                    </tbody>
+                </table>
+            </div>
+        <#else>
+            <div class="alert alert-warning text-center">No hay usuarios registrados.</div>
+        </#if>
+    </div>
     <!-- Productos -->
 
     <div id="productosSection" class="section active">
@@ -422,6 +491,20 @@
             document.getElementById('eliminarForm' + id).submit();
         }
     }
+
+    links.forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            links.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            const id = link.id.replace('link', '').toLowerCase() + 'Section';
+            sections.forEach(section => section.classList.remove('active'));
+            const target = document.getElementById(id);
+            if (target) target.classList.add('active');
+        });
+    });
+
+
 </script>
 
 </body>

@@ -142,6 +142,8 @@
             <input type="file" name="fotoPerfil" id="fotoPerfil" accept="image/*">
         </div>
 
+
+
         <div class="form-group">
             <label for="nombre">Nombre</label>
             <input type="text" id="nombre" name="nombre" value="${usuario.nombre}" required>
